@@ -10,7 +10,8 @@ import { EmptyState } from '@/components/empty-state'
 import { SearchFiltersBar, SearchFilters } from '@/components/search-filters'
 import { Booking } from '@/components/booking-card'
 import { Button } from '@/components/ui/button'
-import { Loader2, Upload } from 'lucide-react'
+import { exportBookingsToExcel } from '@/lib/exportBookings'
+import { Loader2, Download } from 'lucide-react'
 
 interface BookingsData {
   [shift: string]: Booking[]
@@ -107,12 +108,16 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Link href="/import">
-                <Button variant="outline" size="lg" className="gap-2">
-                  <Upload className="w-4 h-4" />
-                  Import Excel
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                size="lg"
+                className="gap-2"
+                disabled={filteredBookings.length === 0 || loading}
+                onClick={() => exportBookingsToExcel(groupedByShift, selectedDate)}
+              >
+                <Download className="w-4 h-4" />
+                Export Excel
+              </Button>
               <AddBookingForm onBookingAdded={fetchBookings} />
             </div>
           </div>
