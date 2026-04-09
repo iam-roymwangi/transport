@@ -5,7 +5,7 @@ import { BookingCard, Booking } from './booking-card'
 import { Button } from '@/components/ui/button'
 import { Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 
-const PAGE_SIZE = 8
+const PAGE_SIZE = 5
 
 export interface ShiftSectionProps {
   shiftTime: string
