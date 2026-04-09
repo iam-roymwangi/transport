@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd transport-frontend && npx prisma generate && next build",
+  "installCommand": "cd transport-frontend && npm install",
+  "outputDirectory": "transport-frontend/.next",
+  "framework": "nextjs"
+}
