@@ -1,28 +1,22 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import Link from 'next/link'
+import { Navbar } from '@/components/navbar'
 import { DateSelector } from '@/components/date-selector'
 import { SummaryStats } from '@/components/summary-stats'
 import { ShiftSection } from '@/components/shift-section'
-import { AddBookingForm } from '@/components/add-booking-form'
 import { EmptyState } from '@/components/empty-state'
 import { SearchFiltersBar, SearchFilters } from '@/components/search-filters'
 import { Booking } from '@/components/booking-card'
-import { Button } from '@/components/ui/button'
 import { exportBookingsToExcel } from '@/lib/exportBookings'
-import { Loader2, Download } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
-interface BookingsData {
-  [shift: string]: Booking[]
-}
+interface BookingsData { [shift: string]: Booking[] }
 
 const EMPTY_FILTERS: SearchFilters = { name: '', staffNumber: '', phoneNumber: '' }
 
 export default function Dashboard() {
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  )
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [allBookings, setAllBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<SearchFilters>(EMPTY_FILTERS)
@@ -30,11 +24,10 @@ export default function Dashboard() {
   const fetchBookings = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/bookings?date=${selectedDate}`)
-      const data: Booking[] = await response.json()
+      const res = await fetch(`/api/bookings?date=${selectedDate}`)
+      const data: Booking[] = await res.json()
       setAllBookings(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error('Failed to fetch bookings:', error)
+    } catch {
       setAllBookings([])
     } finally {
       setLoading(false)
@@ -43,35 +36,30 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchBookings()
-    setFilters(EMPTY_FILTERS) // reset filters on date change
+    setFilters(EMPTY_FILTERS)
   }, [selectedDate, fetchBookings])
 
-  // Apply search filters
-  const filteredBookings = useMemo(() => {
-    return allBookings.filter((b) => {
-      const name = filters.name.toLowerCase()
-      const staff = filters.staffNumber.toLowerCase()
-      const phone = filters.phoneNumber.toLowerCase()
-      return (
-        (!name || b.name?.toLowerCase().includes(name)) &&
-        (!staff || b.staffNumber?.toLowerCase().includes(staff)) &&
-        (!phone || b.phoneNumber?.toLowerCase().includes(phone))
-      )
-    })
-  }, [allBookings, filters])
+  const filteredBookings = useMemo(() => allBookings.filter((b) => {
+    const n = filters.name.toLowerCase()
+    const s = filters.staffNumber.toLowerCase()
+    const p = filters.phoneNumber.toLowerCase()
+    return (
+      (!n || b.name?.toLowerCase().includes(n)) &&
+      (!s || b.staffNumber?.toLowerCase().includes(s)) &&
+      (!p || b.phoneNumber?.toLowerCase().includes(p))
+    )
+  }), [allBookings, filters])
 
-  // Group filtered bookings by shift
   const groupedByShift = useMemo(() => {
     const groups: BookingsData = {}
-    filteredBookings.forEach((booking) => {
-      const shift = booking.shift || 'Unscheduled'
+    filteredBookings.forEach((b) => {
+      const shift = b.shift || 'Unscheduled'
       if (!groups[shift]) groups[shift] = []
-      groups[shift].push(booking)
+      groups[shift].push(b)
     })
     return groups
   }, [filteredBookings])
 
-  // Summary stats always from full unfiltered set
   const { totalBookings, numberOfShifts, mostUsedRoute } = useMemo(() => {
     const routeCounts: Record<string, number> = {}
     allBookings.forEach((b) => {
@@ -85,7 +73,6 @@ export default function Dashboard() {
     }
   }, [allBookings])
 
-  // Sort shifts chronologically
   const sortedShifts = Object.keys(groupedByShift).sort((a, b) => {
     const parse = (s: string) => parseInt(s.split(' - ')[0].replace(/[:/]/g, '').slice(0, 4))
     return parse(a) - parse(b)
@@ -95,45 +82,18 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-                Transport Booking
-              </h1>
-              <p className="text-slate-600 mt-1 text-sm">
-                Manage and track your transport bookings efficiently
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="lg"
-                className="gap-2"
-                disabled={filteredBookings.length === 0 || loading}
-                onClick={() => exportBookingsToExcel(groupedByShift, selectedDate)}
-              >
-                <Download className="w-4 h-4" />
-                Export Excel
-              </Button>
-              <AddBookingForm onBookingAdded={fetchBookings} />
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar
+        onExport={() => exportBookingsToExcel(groupedByShift, selectedDate)}
+        exportDisabled={filteredBookings.length === 0 || loading}
+        onBookingAdded={fetchBookings}
+      />
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
           {/* Date Selector */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h2 className="text-lg font-semibold text-slate-900">Select Date</h2>
-            <DateSelector
-              selectedDate={selectedDate}
-              onDateChange={setSelectedDate}
-            />
+            <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
           </div>
 
           {/* Summary Stats */}
@@ -159,12 +119,9 @@ export default function Dashboard() {
             </section>
           )}
 
-          {/* Bookings Section */}
+          {/* Bookings */}
           <section>
-            <h2 className="text-lg font-semibold text-slate-900 mb-6">
-              Bookings by Shift
-            </h2>
-
+            <h2 className="text-lg font-semibold text-slate-900 mb-6">Bookings by Shift</h2>
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
@@ -183,9 +140,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : hasActiveFilter ? (
-              <div className="text-center py-16 text-slate-500">
-                No bookings match your search.
-              </div>
+              <div className="text-center py-16 text-slate-500">No bookings match your search.</div>
             ) : (
               <EmptyState date={selectedDate} />
             )}

@@ -197,6 +197,7 @@ export function AddBookingForm({ onBookingAdded }: { onBookingAdded?: () => void
                   <Input
                     type="date"
                     value={formData.date}
+                    min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                     required
                     disabled={loading}

@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { Navbar } from '@/components/navbar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
+import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle } from 'lucide-react'
 
 interface ImportResult {
   success: boolean
@@ -61,20 +61,7 @@ export default function ImportPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Import Bookings</h1>
-            <p className="text-sm text-slate-600">Upload a Microsoft Forms Excel export</p>
-          </div>
-        </div>
-      </header>
-
+      <Navbar />
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-6">
         {/* Drop zone */}
         <Card
