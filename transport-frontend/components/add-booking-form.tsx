@@ -79,8 +79,21 @@ function RequiredLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function AddBookingForm({ onBookingAdded }: { onBookingAdded?: () => void }) {
-  const [open, setOpen] = useState(false)
+export function AddBookingForm({
+  onBookingAdded,
+  forceOpen,
+  onOpenChange,
+}: {
+  onBookingAdded?: () => void
+  forceOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+}) {
+  const [open, setOpen] = useState(forceOpen ?? false)
+
+  const handleOpenChange = (v: boolean) => {
+    setOpen(v)
+    onOpenChange?.(v)
+  }
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState(EMPTY_FORM)
 
@@ -123,7 +136,7 @@ export function AddBookingForm({ onBookingAdded }: { onBookingAdded?: () => void
 
       toast.success('Booking confirmed successfully.')
       setFormData(EMPTY_FORM)
-      setOpen(false)
+      handleOpenChange(false)
       onBookingAdded?.()
     } catch (error) {
       console.error('Error adding booking:', error)
@@ -135,16 +148,19 @@ export function AddBookingForm({ onBookingAdded }: { onBookingAdded?: () => void
 
   return (
     <>
-      <Button
-        onClick={() => setOpen(true)}
-        size="lg"
-        className="gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg hover:shadow-xl transition-all"
-      >
-        <Plus className="w-5 h-5" />
-        Add Booking
-      </Button>
+      {/* Only show the trigger button when not controlled externally */}
+      {!forceOpen && onOpenChange === undefined && (
+        <Button
+          onClick={() => handleOpenChange(true)}
+          size="lg"
+          className="gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg hover:shadow-xl transition-all"
+        >
+          <Plus className="w-5 h-5" />
+          Add Booking
+        </Button>
+      )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl">Add New Booking</DialogTitle>
@@ -314,7 +330,7 @@ export function AddBookingForm({ onBookingAdded }: { onBookingAdded?: () => void
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => handleOpenChange(false)}
                 disabled={loading}
                 className="flex-1"
               >

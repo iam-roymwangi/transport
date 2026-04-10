@@ -139,9 +139,6 @@ export function Navbar({ onExport, exportDisabled, onBookingAdded }: NavbarProps
                   Export Excel
                 </Button>
               )}
-              <div onClick={() => setMenuOpen(false)}>
-                <AddBookingForm onBookingAdded={onBookingAdded} />
-              </div>
             </div>
           </div>
         </div>
