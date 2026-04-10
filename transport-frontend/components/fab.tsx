@@ -19,8 +19,9 @@ export function FloatingAddButton({ onBookingAdded }: { onBookingAdded?: () => v
       {/* Fully controlled dialog — no trigger button inside */}
       <BookingDialog open={open} onOpenChange={setOpen} onBookingAdded={onBookingAdded} />
 
-      {/* FAB — mobile only, nothing overlapping it */}
-      <div className="md:hidden fixed bottom-6 right-5 z-[9999]">
+      {/* FAB — mobile only, hidden while dialog is open */}
+      {!open && (
+        <div className="md:hidden fixed bottom-6 right-5 z-[9999]">
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -44,6 +45,7 @@ export function FloatingAddButton({ onBookingAdded }: { onBookingAdded?: () => v
           </span>
         </button>
       </div>
+      )}
     </>
   )
 }
