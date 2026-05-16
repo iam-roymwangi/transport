@@ -53,15 +53,23 @@ function RequiredLabel({ children }: { children: React.ReactNode }) {
 }
 
 // ── Shared form body ──────────────────────────────────────────────────────────
+export interface BookingInitialData {
+  name?: string
+  staffNumber?: string
+  phoneNumber?: string
+}
+
 function BookingFormBody({
   onClose,
   onBookingAdded,
+  initialData,
 }: {
   onClose: () => void
   onBookingAdded?: () => void
+  initialData?: BookingInitialData
 }) {
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState(EMPTY_FORM)
+  const [formData, setFormData] = useState({ ...EMPTY_FORM, ...(initialData || {}) })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -193,10 +201,12 @@ export function BookingDialog({
   open,
   onOpenChange,
   onBookingAdded,
+  initialData,
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
   onBookingAdded?: () => void
+  initialData?: BookingInitialData
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -205,23 +215,46 @@ export function BookingDialog({
           <DialogTitle className="text-2xl">Add New Booking</DialogTitle>
           <DialogDescription>All fields marked <span className="text-red-500">*</span> are required.</DialogDescription>
         </DialogHeader>
-        <BookingFormBody onClose={() => onOpenChange(false)} onBookingAdded={onBookingAdded} />
+        <BookingFormBody onClose={() => onOpenChange(false)} onBookingAdded={onBookingAdded} initialData={initialData} />
       </DialogContent>
     </Dialog>
   )
 }
 
 // ── Self-contained button + dialog — used in navbar ───────────────────────────
-export function AddBookingForm({ onBookingAdded }: { onBookingAdded?: () => void }) {
+import { getSystemStatus } from '@/app/admin/settings-actions';
+
+export function AddBookingForm({ 
+  onBookingAdded,
+  initialData
+}: { 
+  onBookingAdded?: () => void
+  initialData?: BookingInitialData
+}) {
   const [open, setOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(true)
+  const [checking, setChecking] = useState(false)
+
+  const handleOpenClick = async () => {
+    setChecking(true)
+    const status = await getSystemStatus()
+    setIsOpen(status)
+    setChecking(false)
+    if (status) {
+      setOpen(true)
+    } else {
+      toast.error('Bookings are currently closed by the administrator.')
+    }
+  }
+
   return (
     <>
-      <Button onClick={() => setOpen(true)} size="lg"
-        className="gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg hover:shadow-xl transition-all">
-        <Plus className="w-5 h-5" />
+      <Button onClick={handleOpenClick} size="sm" disabled={checking}
+        className="gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-sm transition-all">
+        {checking ? <Spinner className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
         Add Booking
       </Button>
-      <BookingDialog open={open} onOpenChange={setOpen} onBookingAdded={onBookingAdded} />
+      <BookingDialog open={open} onOpenChange={setOpen} onBookingAdded={onBookingAdded} initialData={initialData} />
     </>
   )
 }

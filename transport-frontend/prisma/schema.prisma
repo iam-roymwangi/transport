@@ -33,3 +33,35 @@ model Booking {
 
   @@unique([staffNumber, date, shift])
 }
+
+model Staff {
+  id           String   @id @default(uuid())
+  name         String
+  staffNumber  String   @unique
+  phoneNumber  String?
+  location     String?
+  currentShift String?
+  process      String?
+  route        String?
+  address      String?
+  pinLocation  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model BookingEditRequest {
+  id               String   @id @default(uuid())
+  bookingId        String
+  staffNumber      String
+  requestedChanges Json
+  status           String   @default("PENDING")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model SystemSettings {
+  id              String   @id @default("singleton")
+  bookingsOpen    Boolean  @default(true)
+  automationRules Json?
+  updatedAt       DateTime @updatedAt
+}

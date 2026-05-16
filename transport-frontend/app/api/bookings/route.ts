@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createBooking, getBookingsByDate } from '@/lib/bookingService'
 import { Prisma } from '@prisma/client'
+import { getSystemStatus } from '../../admin/settings-actions';
 
 // GET /api/bookings?date=YYYY-MM-DD
 export async function GET(req: NextRequest) {
@@ -23,6 +24,15 @@ export async function GET(req: NextRequest) {
 
 // POST /api/bookings
 export async function POST(req: NextRequest) {
+  try {
+    const isOpen = await getSystemStatus();
+    if (!isOpen) {
+      return NextResponse.json({ success: false, message: 'Bookings are currently closed by the administrator.' }, { status: 403 });
+    }
+  } catch (e) {
+    // ignore
+  }
+
   const body = await req.json()
   const { name, staffNumber, shift, date } = body
 
