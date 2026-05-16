@@ -1,6 +1,6 @@
 'use client';
 
-import { Bus, LayoutDashboard, Settings, Users, FileText } from 'lucide-react';
+import { Bus, LayoutDashboard, Settings, Users, FileText, DollarSign } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -35,8 +35,13 @@ const items = [
     icon: Users,
   },
   {
+    title: 'Expenses',
+    url: '/admin/expenses',
+    icon: DollarSign,
+  },
+  {
     title: 'Settings',
-    url: '/admin/settings', // For future extension
+    url: '/admin/settings',
     icon: Settings,
   },
 ];
