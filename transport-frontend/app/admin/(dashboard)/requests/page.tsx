@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import {
   Card,
   CardContent,
@@ -9,7 +9,6 @@ import {
 import { FileEdit } from 'lucide-react';
 import { RequestsClientTable } from './client-table';
 
-const prisma = new PrismaClient();
 export const revalidate = 0;
 
 export default async function EditRequestsPage() {

@@ -346,13 +346,14 @@ export function ClientTable({ initialBookings }: ClientTableProps) {
               <TableHead>Shift & Date</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Route</TableHead>
+              <TableHead>Address</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {currentBookings.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                   No bookings found.
                 </TableCell>
               </TableRow>
@@ -411,6 +412,18 @@ export function ClientTable({ initialBookings }: ClientTableProps) {
                         <>
                           <Route className="h-3 w-3 text-muted-foreground" />
                           {booking.route}
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1 text-sm">
+                      {booking.address ? (
+                        <>
+                          <MapPin className="h-3 w-3 text-muted-foreground" />
+                          {booking.address}
                         </>
                       ) : (
                         <span className="text-muted-foreground">-</span>

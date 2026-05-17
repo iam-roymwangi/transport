@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { ExpensesDashboard } from './expenses-dashboard';
 
-const prisma = new PrismaClient();
 export const revalidate = 0;
 
 // ─── Distance lookup table (dummy distances in km) ─────────────────────────

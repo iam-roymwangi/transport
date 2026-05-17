@@ -85,6 +85,10 @@ function BookingFormBody({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, route: formData.routes.join(', ') }),
       })
+      if (res.status === 403) {
+        toast.error('Bookings are currently closed by the administrator.')
+        return
+      }
       if (res.status === 409) {
         toast.warning('Duplicate booking — this staff member already has a booking for this shift on this date.')
         return

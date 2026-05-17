@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SettingsFilters } from './settings-filters';
 import { Settings as SettingsIcon } from 'lucide-react';
 
-const prisma = new PrismaClient();
 export const revalidate = 0;
 
 export default async function SettingsPage() {

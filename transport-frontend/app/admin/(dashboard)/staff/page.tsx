@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import {
   Card,
   CardContent,
@@ -10,7 +10,6 @@ import { Users } from 'lucide-react';
 import { StaffClientTable } from './client-table';
 
 // Use a global prisma instance or create a new one for this component
-const prisma = new PrismaClient();
 
 // Revalidate this page dynamically or every few seconds if needed
 export const revalidate = 0;

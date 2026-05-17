@@ -1,6 +1,6 @@
 'use client';
 
-import { Bus, LayoutDashboard } from 'lucide-react';
+import { Bus, LayoutDashboard, CalendarDays } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -19,11 +19,8 @@ import {
 } from '@/components/ui/sidebar';
 
 const items = [
-  {
-    title: 'My Bookings',
-    url: '/staff',
-    icon: LayoutDashboard,
-  },
+  { title: 'My Bookings', url: '/staff', icon: LayoutDashboard },
+  { title: 'My Calendar', url: '/staff/calendar', icon: CalendarDays },
 ];
 
 export function StaffSidebar() {

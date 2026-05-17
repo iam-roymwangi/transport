@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import {
   Card,
   CardContent,
@@ -13,7 +13,6 @@ import { StaffDashboardClient } from './client-table';
 
 import { StaffAddBookingButton } from './add-booking-button';
 
-const prisma = new PrismaClient();
 export const revalidate = 0;
 
 export default async function StaffDashboardPage() {
