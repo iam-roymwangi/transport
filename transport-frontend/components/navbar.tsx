@@ -12,8 +12,6 @@ import {
   Menu,
   X,
   Bus,
-  Users,
-  Shield,
 } from 'lucide-react'
 
 interface NavbarProps {
@@ -23,10 +21,8 @@ interface NavbarProps {
 }
 
 const NAV_LINKS = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
-  { href: '/staff/login', label: 'Staff Portal', icon: Users },
-  { href: '/admin', label: 'Admin Portal', icon: Shield },
 ]
 
 export function Navbar({ onExport, exportDisabled, onBookingAdded }: NavbarProps) {
