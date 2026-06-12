@@ -1,14 +1,5 @@
 // Prisma schema for transport booking system
 // Database: Neon (serverless PostgreSQL)
-//
-// SETUP STEPS:
-// 1. Go to https://neon.tech and create a free account
-// 2. Create a new project (e.g. "transport-booking")
-// 3. Copy the connection string from the dashboard
-// 4. Add to your .env file:
-//    DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
-// 5. Run: npx prisma db push
-// 6. Run: npx prisma generate
 
 generator client {
   provider = "prisma-client-js"
@@ -33,4 +24,36 @@ model Booking {
   createdAt   DateTime @default(now())
 
   @@unique([staffNumber, date, shift])
+}
+
+model Staff {
+  id           String   @id @default(uuid())
+  name         String
+  staffNumber  String   @unique
+  phoneNumber  String?
+  location     String?
+  currentShift String?
+  process      String?
+  route        String?
+  address      String?
+  pinLocation  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model BookingEditRequest {
+  id               String   @id @default(uuid())
+  bookingId        String
+  staffNumber      String
+  requestedChanges Json
+  status           String   @default("PENDING")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model SystemSettings {
+  id              String   @id @default("singleton")
+  bookingsOpen    Boolean  @default(true)
+  automationRules Json?
+  updatedAt       DateTime @updatedAt
 }

@@ -6,6 +6,9 @@ const errorHandler = require("./utils/errorHandler");
 const bookingsRouter = require("./routes/bookings");
 const importRouter = require("./routes/import");
 const summaryRouter = require("./routes/summary");
+const authRouter = require("./routes/auth");
+const settingsRouter = require("./routes/settings");
+const editRequestsRouter = require("./routes/editRequests");
 
 const app = express();
 
@@ -22,6 +25,9 @@ app.get("/health", (req, res) => {
 app.use("/bookings", bookingsRouter);
 app.use("/import-bookings", importRouter);
 app.use("/summary", summaryRouter);
+app.use("/auth", authRouter);
+app.use("/settings", settingsRouter);
+app.use("/edit-requests", editRequestsRouter);
 
 // 404 handler
 app.use((req, res) => {

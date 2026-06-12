@@ -83,4 +83,39 @@ async function getSummaryByDate(dateStr) {
   };
 }
 
-module.exports = { createBooking, getBookingsByDate, getSummaryByDate };
+async function getMyBookings(staffNumber) {
+  return prisma.booking.findMany({
+    where: { staffNumber: staffNumber.toUpperCase() },
+    orderBy: { date: "desc" },
+  });
+}
+
+async function updateBooking(id, data) {
+  let parsedData = { ...data };
+  if (parsedData.date) {
+    parsedData.date = new Date(normalizeDate(parsedData.date));
+  }
+
+  return prisma.booking.update({
+    where: { id },
+    data: parsedData,
+  });
+}
+
+async function deleteBookings(ids) {
+  return prisma.booking.deleteMany({
+    where: {
+      id: { in: ids },
+    },
+  });
+}
+
+module.exports = {
+  createBooking,
+  getBookingsByDate,
+  getSummaryByDate,
+  getMyBookings,
+  updateBooking,
+  deleteBookings,
+};
+
