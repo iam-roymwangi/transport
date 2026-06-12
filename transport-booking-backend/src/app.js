@@ -13,7 +13,15 @@ const editRequestsRouter = require("./routes/editRequests");
 const app = express();
 
 // Middleware
-app.use(cors());
+// Configure CORS to allow both development and production origins
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://transport-nai.vercel.app']
+    : ['http://localhost:35527', 'http://localhost:3000', 'http://localhost:3001', 'http://10.0.2.2:*'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+}));
 app.use(express.json());
 
 // Health check
