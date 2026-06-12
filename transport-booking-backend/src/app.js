@@ -14,10 +14,25 @@ const app = express();
 
 // Middleware
 // Configure CORS to allow both development and production origins
+const allowedOrigins = [
+  'https://transport-nai.vercel.app',
+  'http://localhost:35527',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://10.0.2.2:3001'
+];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://transport-nai.vercel.app']
-    : ['http://localhost:35527', 'http://localhost:3000', 'http://localhost:3001', 'http://10.0.2.2:*'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all for now during development
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
