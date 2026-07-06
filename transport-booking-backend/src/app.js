@@ -12,19 +12,22 @@ const editRequestsRouter = require("./routes/editRequests");
 
 const app = express();
 
-const app = express();
-
 // Middleware
-// Configure CORS - Allow all origins during development
-app.use(cors({
-  origin: '*',
+// Configure CORS - Dynamically allow request origins to resolve CORS issues with Expo Go / Web
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow all origins dynamically (including localhost, Expo web ports, and local IP addresses)
+    callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-  credentials: false
-}));
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 
 // Explicitly handle preflight requests
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
