@@ -1,6 +1,15 @@
 'use client';
 
-import { Bus, LayoutDashboard, Settings, Users, FileText, DollarSign } from 'lucide-react';
+import {
+  Bus,
+  LayoutDashboard,
+  Settings,
+  Users,
+  FileText,
+  DollarSign,
+  CalendarClock,
+  Navigation,
+} from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -23,6 +32,16 @@ const items = [
     title: 'Dashboard Overview',
     url: '/admin',
     icon: LayoutDashboard,
+  },
+  {
+    title: 'WFM & Schedules',
+    url: '/admin/wfm',
+    icon: CalendarClock,
+  },
+  {
+    title: 'Trip Tracking & Carpool',
+    url: '/admin/trips',
+    icon: Navigation,
   },
   {
     title: 'Edit Requests',
@@ -63,7 +82,9 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
-                const isActive = pathname === item.url || (item.url !== '/admin' && pathname.startsWith(item.url));
+                const isActive =
+                  pathname === item.url ||
+                  (item.url !== '/admin' && pathname.startsWith(item.url));
 
                 return (
                   <SidebarMenuItem key={item.title}>

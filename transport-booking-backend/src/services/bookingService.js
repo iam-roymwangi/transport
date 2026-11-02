@@ -7,18 +7,53 @@ const cleanString = require("../utils/cleanString");
  */
 async function createBooking(data) {
   const dateISO = normalizeDate(data.date);
+  const staffNumInput = cleanString(data.staffNumber);
+  const bmsNumInput = cleanString(data.bmsNumber);
+
+  // Look up staff if exists to pull transport details & BMS/role
+  let staff = null;
+  if (bmsNumInput) {
+    staff = await prisma.staff.findFirst({
+      where: { bmsNumber: bmsNumInput },
+    });
+  }
+
+  if (!staff && staffNumInput) {
+    staff = await prisma.staff.findFirst({
+      where: { staffNumber: staffNumInput },
+    });
+  }
+
+  const staffNum = staffNumInput || staff?.staffNumber || bmsNumInput || "UNKNOWN";
+  const bmsNumber = bmsNumInput || staff?.bmsNumber || null;
+  const role = cleanString(data.role) || staff?.role || "Agent";
+  const location = cleanString(data.location) || staff?.location || null;
+  const route = cleanString(data.route) || staff?.route || null;
+  const address = cleanString(data.address) || staff?.address || null;
+  const phoneNumber = cleanString(data.phoneNumber) || staff?.phoneNumber || null;
+  const process = cleanString(data.process) || staff?.process || null;
+  const pinLocation = cleanString(data.pinLocation) || staff?.pinLocation || null;
+  const googleMapsUrl = cleanString(data.googleMapsUrl) || staff?.googleMapsUrl || null;
+  const latitude = data.latitude !== undefined && data.latitude !== null ? parseFloat(data.latitude) : (staff?.latitude ?? null);
+  const longitude = data.longitude !== undefined && data.longitude !== null ? parseFloat(data.longitude) : (staff?.longitude ?? null);
 
   return prisma.booking.create({
     data: {
       name: cleanString(data.name),
-      staffNumber: cleanString(data.staffNumber),
-      phoneNumber: cleanString(data.phoneNumber),
-      location: cleanString(data.location),
-      route: cleanString(data.route),
+      bmsNumber,
+      staffNumber: staffNum,
+      phoneNumber,
+      role,
+      location,
+      route,
       shift: cleanString(data.shift),
       date: new Date(dateISO),
-      address: cleanString(data.address),
-      process: cleanString(data.process),
+      address,
+      process,
+      pinLocation,
+      latitude,
+      longitude,
+      googleMapsUrl,
     },
   });
 }
@@ -75,17 +110,29 @@ async function getSummaryByDate(dateStr) {
     return acc;
   }, {});
 
+  const byRole = bookings.reduce((acc, b) => {
+    const key = b.role || "Agent";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
   return {
     date: dateStr,
     total: bookings.length,
     byShift,
     byLocation,
+    byRole,
   };
 }
 
-async function getMyBookings(staffNumber) {
+async function getMyBookings(identifier) {
   return prisma.booking.findMany({
-    where: { staffNumber: staffNumber.toUpperCase() },
+    where: {
+      OR: [
+        { staffNumber: identifier.toUpperCase() },
+        { bmsNumber: identifier },
+      ],
+    },
     orderBy: { date: "desc" },
   });
 }
@@ -118,4 +165,3 @@ module.exports = {
   updateBooking,
   deleteBookings,
 };
-

@@ -37,7 +37,7 @@ export default function StaffLoginPage() {
             </div>
             <CardTitle className="text-2xl font-bold tracking-tight">Staff Portal</CardTitle>
             <CardDescription className="text-base">
-              Enter your Staff Number to manage your bookings
+              Enter your 7-digit BMS Number or Staff ID to manage your bookings
             </CardDescription>
           </CardHeader>
           <form action={formAction}>
@@ -48,12 +48,12 @@ export default function StaffLoginPage() {
                 </Alert>
               )}
               <div className="space-y-2">
-                <Label htmlFor="staffNumber">Staff Number</Label>
+                <Label htmlFor="staffNumber">BMS Number / Staff ID</Label>
                 <Input
                   id="staffNumber"
                   name="staffNumber"
                   type="text"
-                  placeholder="e.g. MJK001"
+                  placeholder="e.g. 6142719 or MJK001"
                   required
                   disabled={isPending}
                   className="h-11"

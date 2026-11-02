@@ -17,10 +17,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { MapPin, Activity, Edit2, Loader2, Clock, Navigation, CalendarIcon, X } from 'lucide-react';
+import { MapPin, Activity, Edit2, Loader2, Clock, Navigation, CalendarIcon, X, ExternalLink } from 'lucide-react';
 import type { Booking, BookingEditRequest } from '@prisma/client';
 import { submitEditRequestAction } from '../actions';
-import { LOCATIONS, ROUTES, PROCESSES, SHIFTS } from '@/lib/booking-options';
+import { LOCATIONS, ROUTES, PROCESSES, SHIFTS, ROLE_INFO, StaffRole } from '@/lib/booking-options';
 
 interface StaffDashboardClientProps {
   initialBookings: Booking[];
@@ -121,7 +121,7 @@ export function StaffDashboardClient({ initialBookings, pendingRequests }: Staff
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <form onSubmit={handleEditSubmit}>
             <DialogHeader>
-              <DialogTitle>Request Edit</DialogTitle>
+              <DialogTitle>Request Booking Edit</DialogTitle>
               <DialogDescription>
                 Proposed changes will be sent to the administrator for approval.
               </DialogDescription>
@@ -158,7 +158,11 @@ export function StaffDashboardClient({ initialBookings, pendingRequests }: Staff
                   <Select value={editShift} onValueChange={setEditShift}>
                     <SelectTrigger><SelectValue placeholder="Select shift" /></SelectTrigger>
                     <SelectContent>
-                      {SHIFTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      {SHIFTS.map(s => (
+                        <SelectItem key={s} value={s}>
+                          {s} {s.includes('02:00') || s.includes('01:00') || s.includes('03:00') ? '🌙 (Overnight)' : ''}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -166,7 +170,7 @@ export function StaffDashboardClient({ initialBookings, pendingRequests }: Staff
 
               {/* Location */}
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-sm">Location</Label>
+                <Label className="text-right text-sm">Hub Location</Label>
                 <div className="col-span-3">
                   <Select value={editLocation} onValueChange={setEditLocation}>
                     <SelectTrigger><SelectValue placeholder="Select location" /></SelectTrigger>
@@ -231,8 +235,8 @@ export function StaffDashboardClient({ initialBookings, pendingRequests }: Staff
           <TableHeader>
             <TableRow>
               <TableHead>Shift &amp; Date</TableHead>
-              <TableHead>Process</TableHead>
-              <TableHead>Location</TableHead>
+              <TableHead>Role &amp; Process</TableHead>
+              <TableHead>Location &amp; Destination</TableHead>
               <TableHead>Route</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Action</TableHead>
@@ -248,26 +252,62 @@ export function StaffDashboardClient({ initialBookings, pendingRequests }: Staff
             ) : (
               filteredBookings.map((booking) => {
                 const isPendingEdit = pendingBookingIds.has(booking.id);
+                const role = (booking.role as StaffRole) || 'Agent';
+                const roleBadge = ROLE_INFO[role]?.badgeColor || '';
+
                 return (
                   <TableRow key={booking.id}>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <Badge variant="outline" className="w-fit">{booking.shift}</Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="w-fit">{booking.shift}</Badge>
+                          {booking.shift.includes('02:00') || booking.shift.includes('01:00') || booking.shift.includes('03:00') || booking.shift.includes('05:00') ? (
+                            <span className="text-[11px] text-indigo-600 font-medium">🌙</span>
+                          ) : null}
+                        </div>
                         <div className="text-sm font-medium">{format(new Date(booking.date), 'MMM d, yyyy')}</div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        {booking.process
-                          ? <><Activity className="h-3 w-3 text-muted-foreground" />{booking.process}</>
-                          : <span className="text-muted-foreground">-</span>}
+                      <div className="flex flex-col gap-1 text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className={`w-fit text-[11px] ${roleBadge}`}>
+                            {role}
+                          </Badge>
+                          {(booking as any).bmsNumber && (
+                            <span className="text-[11px] font-mono text-primary font-semibold">
+                              BMS: {(booking as any).bmsNumber}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          {booking.process
+                            ? <><Activity className="h-3 w-3 text-muted-foreground" />{booking.process}</>
+                            : '-'}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        {booking.location
-                          ? <><MapPin className="h-3 w-3 text-muted-foreground" />{booking.location}</>
-                          : <span className="text-muted-foreground">-</span>}
+                      <div className="flex flex-col gap-1 text-sm">
+                        <div className="flex items-center gap-1">
+                          {booking.location
+                            ? <><MapPin className="h-3 w-3 text-muted-foreground" />{booking.location}</>
+                            : <span className="text-muted-foreground">-</span>}
+                        </div>
+                        {booking.latitude && booking.longitude ? (
+                          <a
+                            href={booking.googleMapsUrl || `https://www.google.com/maps?q=${booking.latitude},${booking.longitude}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                          >
+                            <Navigation className="h-3 w-3" />
+                            {booking.latitude.toFixed(4)}, {booking.longitude.toFixed(4)}
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        ) : booking.address ? (
+                          <span className="text-xs text-muted-foreground truncate max-w-[160px]">{booking.address}</span>
+                        ) : null}
                       </div>
                     </TableCell>
                     <TableCell>

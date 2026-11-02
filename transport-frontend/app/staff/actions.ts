@@ -2,28 +2,34 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { extractCoordinates, buildGoogleMapsUrl } from '@/lib/googleMaps';
+import { revalidatePath } from 'next/cache';
 
 export async function staffLoginAction(prevState: any, formData: FormData) {
-  const staffNumber = formData.get('staffNumber') as string;
+  const staffInput = formData.get('staffNumber') as string;
 
-  if (!staffNumber) {
-    return { error: 'Staff Number is required' };
+  if (!staffInput) {
+    return { error: 'BMS Number or Staff ID is required' };
   }
 
   try {
-    const staff = await prisma.staff.findUnique({
-      where: { staffNumber },
+    const cleanInput = staffInput.trim();
+    const staff = await prisma.staff.findFirst({
+      where: {
+        OR: [
+          { bmsNumber: cleanInput },
+          { staffNumber: cleanInput },
+          { staffNumber: cleanInput.toUpperCase() },
+        ],
+      },
     });
 
     if (!staff) {
-      return { error: 'Invalid Staff Number. Employee not found.' };
+      return { error: 'Invalid BMS Number or Staff ID. Employee not found.' };
     }
 
-    // Since this is MVP, we just use the staffNumber as the token value.
-    // In a real app, you would issue a signed JWT.
+    // Set token with the staff number
     (await cookies()).set('staff_token', staff.staffNumber, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -67,7 +73,7 @@ export async function submitEditRequestAction(bookingId: string, requestedChange
     await prisma.bookingEditRequest.create({
       data: {
         bookingId,
-        staffNumber: authCookie, // staffNumber is the token value
+        staffNumber: authCookie,
         requestedChanges: parsedData,
       },
     });
@@ -75,5 +81,77 @@ export async function submitEditRequestAction(bookingId: string, requestedChange
   } catch (error) {
     console.error('Error submitting edit request:', error);
     return { success: false, error: 'Failed to submit edit request.' };
+  }
+}
+
+export async function updateMyTransportDetailsAction(data: {
+  phoneNumber?: string;
+  location?: string;
+  route?: string;
+  address?: string;
+  googleMapsUrl?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  pinLocation?: string;
+}) {
+  const authCookie = (await cookies()).get('staff_token')?.value;
+  if (!authCookie) {
+    throw new Error('Unauthorized');
+  }
+
+  try {
+    let lat = data.latitude;
+    let lng = data.longitude;
+    let pinLocation = data.pinLocation?.trim() || null;
+    let googleMapsUrl = data.googleMapsUrl?.trim() || null;
+
+    // If coordinates missing, attempt extraction from googleMapsUrl or pinLocation
+    if ((lat === undefined || lat === null) && googleMapsUrl) {
+      const extracted = extractCoordinates(googleMapsUrl);
+      if (extracted) {
+        lat = extracted.latitude;
+        lng = extracted.longitude;
+      }
+    }
+
+    if ((lat === undefined || lat === null) && pinLocation) {
+      const extracted = extractCoordinates(pinLocation);
+      if (extracted) {
+        lat = extracted.latitude;
+        lng = extracted.longitude;
+      }
+    }
+
+    // Standardize URL and pin string
+    if (lat !== undefined && lat !== null && lng !== undefined && lng !== null) {
+      if (!googleMapsUrl) {
+        googleMapsUrl = buildGoogleMapsUrl(lat, lng);
+      }
+      if (!pinLocation) {
+        pinLocation = `${lat}, ${lng}`;
+      }
+    }
+
+    const updated = await prisma.staff.update({
+      where: { staffNumber: authCookie },
+      data: {
+        phoneNumber: data.phoneNumber,
+        location: data.location,
+        route: data.route,
+        address: data.address,
+        googleMapsUrl,
+        pinLocation,
+        latitude: lat ?? null,
+        longitude: lng ?? null,
+      },
+    });
+
+    revalidatePath('/staff');
+    revalidatePath('/staff/profile');
+
+    return { success: true, staff: updated };
+  } catch (error) {
+    console.error('Error updating transport details:', error);
+    return { success: false, error: 'Failed to update transport details.' };
   }
 }

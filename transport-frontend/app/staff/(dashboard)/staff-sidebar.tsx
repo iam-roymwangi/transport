@@ -1,6 +1,6 @@
 'use client';
 
-import { Bus, LayoutDashboard, CalendarDays } from 'lucide-react';
+import { Bus, LayoutDashboard, CalendarDays, CalendarClock, MapPin } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -20,6 +20,8 @@ import {
 
 const items = [
   { title: 'My Bookings', url: '/staff', icon: LayoutDashboard },
+  { title: 'My Schedule', url: '/staff/schedule', icon: CalendarClock },
+  { title: 'Transport Details', url: '/staff/profile', icon: MapPin },
   { title: 'My Calendar', url: '/staff/calendar', icon: CalendarDays },
 ];
 
@@ -41,7 +43,7 @@ export function StaffSidebar() {
             <SidebarMenu>
               {items.map((item) => {
                 const isActive = pathname === item.url || (item.url !== '/staff' && pathname.startsWith(item.url));
-                
+
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
