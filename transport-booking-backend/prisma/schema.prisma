@@ -34,6 +34,7 @@ model Staff {
   name           String
   bmsNumber      String?     @unique
   staffNumber    String      @unique
+  password       String?     // Staff password (defaults to BMS Number)
   phoneNumber    String?
   role           String      @default("Agent")
   supervisorName String?
@@ -151,6 +152,8 @@ model TripPassenger {
 model CampaignConfig {
   id               String   @id @default(uuid())
   name             String   @unique
+  code             String?
+  status           String   @default("ACTIVE") // ACTIVE, INACTIVE, PAUSED
   defaultRestDays  Int[]    @default([5, 6]) // 0=Sun, 1=Mon, ..., 6=Sat
   allowedRestDays  Int[]    @default([5, 6, 0, 1]) // For Caption call: Friday, Saturday, Sunday, Monday
   workingDaysCount Int      @default(5)

@@ -7,14 +7,19 @@ import { extractCoordinates, buildGoogleMapsUrl } from '@/lib/googleMaps';
 import { revalidatePath } from 'next/cache';
 
 export async function staffLoginAction(prevState: any, formData: FormData) {
-  const staffInput = formData.get('staffNumber') as string;
+  const bmsInput = ((formData.get('bmsNumber') as string) || (formData.get('staffNumber') as string) || '').trim();
+  const passwordInput = ((formData.get('password') as string) || '').trim();
 
-  if (!staffInput) {
-    return { error: 'BMS Number or Staff ID is required' };
+  if (!bmsInput) {
+    return { error: 'Please enter your 7-digit BMS Number' };
+  }
+
+  if (!passwordInput) {
+    return { error: 'Please enter your password' };
   }
 
   try {
-    const cleanInput = staffInput.trim();
+    const cleanInput = bmsInput;
     const staff = await prisma.staff.findFirst({
       where: {
         OR: [
@@ -26,10 +31,15 @@ export async function staffLoginAction(prevState: any, formData: FormData) {
     });
 
     if (!staff) {
-      return { error: 'Invalid BMS Number or Staff ID. Employee not found.' };
+      return { error: 'Invalid BMS Number. Employee not found in system.' };
     }
 
-    // Set token with the staff number
+    const expectedPassword = staff.password || staff.bmsNumber;
+    if (!expectedPassword || passwordInput !== expectedPassword) {
+      return { error: 'Invalid password. Your default password is your 7-digit BMS number.' };
+    }
+
+    // Set token with the staff number (used across portal queries)
     (await cookies()).set('staff_token', staff.staffNumber, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

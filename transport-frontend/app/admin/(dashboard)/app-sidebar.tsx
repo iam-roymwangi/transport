@@ -9,6 +9,7 @@ import {
   DollarSign,
   CalendarClock,
   Navigation,
+  Layers,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -37,6 +38,11 @@ const items = [
     title: 'WFM & Schedules',
     url: '/admin/wfm',
     icon: CalendarClock,
+  },
+  {
+    title: 'Campaign Management',
+    url: '/admin/campaigns',
+    icon: Layers,
   },
   {
     title: 'Trip Tracking & Carpool',

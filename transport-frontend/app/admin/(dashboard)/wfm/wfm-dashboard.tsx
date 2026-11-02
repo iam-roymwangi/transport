@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import {
@@ -46,6 +47,7 @@ import {
   RefreshCw,
   ExternalLink,
   TableProperties,
+  Layers,
 } from 'lucide-react';
 import { STAFF_ROLES, StaffRole, ROLE_INFO } from '@/lib/booking-options';
 import { ScheduleModal } from './schedule-modal';
@@ -645,11 +647,19 @@ export function WfmDashboard({
         <TabsContent value="campaigns" className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <div>
-                <CardTitle>Campaign Rest Days Policy (Sun &rarr; Sat Week Cycle)</CardTitle>
-                <CardDescription>
-                  Every staff member has 2 rest days per week (5 working days). Rest day pairs vary depending on the campaign (e.g. Caption Call rest days range from Friday to Monday).
-                </CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Campaign Rest Days Policy (Sun &rarr; Sat Week Cycle)</CardTitle>
+                  <CardDescription>
+                    Every staff member has 2 rest days per week (5 working days). Rest day pairs vary depending on the campaign (e.g. Caption Call rest days range from Friday to Monday).
+                  </CardDescription>
+                </div>
+                <Link href="/admin/campaigns">
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                    <Layers className="w-3.5 h-3.5 text-primary" />
+                    Open Campaign Management
+                  </Button>
+                </Link>
               </div>
             </CardHeader>
             <CardContent>
