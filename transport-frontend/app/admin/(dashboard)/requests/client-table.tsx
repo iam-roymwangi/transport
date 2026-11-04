@@ -12,11 +12,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Check, X, Loader2, ArrowRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Check, X, Loader2, ArrowRight, UserCheck, MessageSquare } from 'lucide-react';
 import type { Booking, BookingEditRequest } from '@prisma/client';
 import { approveEditRequestAction, rejectEditRequestAction } from '../../actions';
 
-type RequestWithContext = BookingEditRequest & { originalBooking?: Booking };
+type RequestWithContext = BookingEditRequest & {
+  originalBooking?: Booking;
+  staffName?: string;
+  supervisorName?: string;
+};
 
 interface RequestsClientTableProps {
   requests: RequestWithContext[];
@@ -94,11 +99,23 @@ export function RequestsClientTable({ requests }: RequestsClientTableProps) {
                 return (
                   <TableRow key={req.id}>
                     <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <div className="font-medium">{req.staffNumber}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {format(new Date(req.createdAt), 'MMM d, yyyy HH:mm')}
+                      <div className="flex flex-col gap-1 min-w-[160px]">
+                        <div className="font-semibold text-slate-900">{req.staffName || req.staffNumber}</div>
+                        <div className="text-xs text-muted-foreground font-mono">
+                          {req.staffNumber} &bull; {format(new Date(req.createdAt), 'MMM d, yyyy HH:mm')}
                         </div>
+                        {req.supervisorName && (
+                          <div className="flex items-center gap-1 text-[11px] text-purple-700 bg-purple-50 px-2 py-0.5 rounded w-fit border border-purple-200 mt-0.5">
+                            <UserCheck className="w-3 h-3 text-purple-600 shrink-0" />
+                            <span>Supervisor: <strong>{req.supervisorName}</strong></span>
+                          </div>
+                        )}
+                        {req.reason && (
+                          <div className="flex items-start gap-1 text-[11px] text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-200 mt-1 max-w-xs">
+                            <MessageSquare className="w-3 h-3 text-slate-400 mt-0.5 shrink-0" />
+                            <span className="italic line-clamp-2">&quot;{req.reason}&quot;</span>
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>

@@ -25,10 +25,23 @@ export default async function EditRequestsPage() {
 
   const bookingsMap = new Map(originalBookings.map(b => [b.id, b]));
 
-  const requestsWithContext = pendingRequests.map(req => ({
-    ...req,
-    originalBooking: bookingsMap.get(req.bookingId)
-  }));
+  // Fetch staff records to provide staffName and fallback supervisorName
+  const staffNumbers = Array.from(new Set(pendingRequests.map(r => r.staffNumber)));
+  const staffList = await prisma.staff.findMany({
+    where: { staffNumber: { in: staffNumbers } },
+    select: { staffNumber: true, name: true, supervisorName: true }
+  });
+  const staffMap = new Map(staffList.map(s => [s.staffNumber, s]));
+
+  const requestsWithContext = pendingRequests.map(req => {
+    const staff = staffMap.get(req.staffNumber);
+    return {
+      ...req,
+      staffName: staff?.name || req.staffNumber,
+      supervisorName: req.supervisorName || staff?.supervisorName || 'Unassigned',
+      originalBooking: bookingsMap.get(req.bookingId)
+    };
+  });
 
   return (
     <div className="space-y-6">
