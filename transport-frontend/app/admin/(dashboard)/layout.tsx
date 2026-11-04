@@ -6,12 +6,14 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { AppSidebar } from './app-sidebar';
 import { getSystemStatus } from '../settings-actions';
 import { BookingStatusToggle } from './booking-status-toggle';
+import { AdminPageLoader } from '@/components/admin-page-loader';
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const isBookingsOpen = await getSystemStatus();
 
   return (
     <SidebarProvider>
+      <AdminPageLoader />
       <AppSidebar />
       <SidebarInset>
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">

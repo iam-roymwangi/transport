@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
@@ -40,6 +40,8 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   SlidersHorizontal,
   CheckCircle2,
 } from 'lucide-react';
@@ -130,6 +132,23 @@ export function AgentRosterTable({ initialRosterData }: AgentRosterTableProps) {
       return matchesSearch && matchesSup;
     });
   }, [agents, searchTerm, supervisorFilter]);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, supervisorFilter]);
+
+  const totalAgents = filteredAgents.length;
+  const totalPages = Math.max(1, Math.ceil(totalAgents / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalAgents);
+  const paginatedAgents = useMemo(() => {
+    return filteredAgents.slice(startIndex, endIndex);
+  }, [filteredAgents, startIndex, endIndex]);
 
   // Navigate months
   const handleMonthChange = async (newMonth: string) => {
@@ -422,17 +441,17 @@ export function AgentRosterTable({ initialRosterData }: AgentRosterTableProps) {
             <thead className="sticky top-0 z-30 bg-slate-100/95 backdrop-blur border-b">
               <tr>
                 {/* Frozen Column 1: Agent Name */}
-                <th className="sticky left-0 z-40 bg-slate-100 px-3 py-2.5 text-left font-bold text-slate-800 min-w-[150px] shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)] border-r">
+                <th className="sticky left-0 z-40 bg-slate-100 px-3 py-2.5 text-left font-bold text-slate-800 min-w-[130px] sm:min-w-[150px] shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)] border-r">
                   Agent Name
                 </th>
 
                 {/* Frozen Column 2: BMS No */}
-                <th className="sticky left-[150px] z-40 bg-slate-100 px-3 py-2.5 text-left font-bold text-slate-800 min-w-[100px] shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)] border-r">
+                <th className="md:sticky md:left-[150px] z-30 md:z-40 bg-slate-100 px-3 py-2.5 text-left font-bold text-slate-800 min-w-[90px] sm:min-w-[100px] md:shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)] border-r">
                   BMS No
                 </th>
 
                 {/* Frozen Column 3: Supervisor */}
-                <th className="sticky left-[250px] z-40 bg-slate-100 px-3 py-2.5 text-left font-bold text-slate-800 min-w-[150px] shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)] border-r">
+                <th className="md:sticky md:left-[250px] z-30 md:z-40 bg-slate-100 px-3 py-2.5 text-left font-bold text-slate-800 min-w-[130px] sm:min-w-[150px] md:shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)] border-r">
                   Supervisor
                 </th>
 
@@ -471,7 +490,7 @@ export function AgentRosterTable({ initialRosterData }: AgentRosterTableProps) {
                   </td>
                 </tr>
               ) : (
-                filteredAgents.map((agent) => {
+                paginatedAgents.map((agent) => {
                   let workCount = 0;
                   let restCount = 0;
 
@@ -487,7 +506,7 @@ export function AgentRosterTable({ initialRosterData }: AgentRosterTableProps) {
                   return (
                     <tr key={agent.id} className="hover:bg-slate-50/70 transition-colors">
                       {/* Frozen Column 1: Agent Name */}
-                      <td className="sticky left-0 z-20 bg-card px-3 py-2 border-r shadow-[2px_0_4px_-1px_rgba(0,0,0,0.04)] font-medium text-slate-900 truncate max-w-[150px]">
+                      <td className="sticky left-0 z-20 bg-card px-3 py-2 border-r shadow-[2px_0_4px_-1px_rgba(0,0,0,0.04)] font-medium text-slate-900 truncate max-w-[130px] sm:max-w-[150px]">
                         <div className="flex items-center gap-1.5">
                           <User className="w-3.5 h-3.5 text-primary shrink-0" />
                           <span className="truncate font-semibold" title={agent.name}>
@@ -497,14 +516,14 @@ export function AgentRosterTable({ initialRosterData }: AgentRosterTableProps) {
                       </td>
 
                       {/* Frozen Column 2: BMS No */}
-                      <td className="sticky left-[150px] z-20 bg-card px-3 py-2 border-r shadow-[2px_0_4px_-1px_rgba(0,0,0,0.04)]">
+                      <td className="md:sticky md:left-[150px] z-10 md:z-20 bg-card px-3 py-2 border-r md:shadow-[2px_0_4px_-1px_rgba(0,0,0,0.04)]">
                         <span className="font-mono font-bold text-primary px-1.5 py-0.5 rounded bg-primary/10">
                           {agent.bmsNumber || agent.staffNumber}
                         </span>
                       </td>
 
                       {/* Frozen Column 3: Supervisor (Editable) */}
-                      <td className="sticky left-[250px] z-20 bg-card px-2 py-1.5 border-r shadow-[2px_0_4px_-1px_rgba(0,0,0,0.04)]">
+                      <td className="md:sticky md:left-[250px] z-10 md:z-20 bg-card px-2 py-1.5 border-r md:shadow-[2px_0_4px_-1px_rgba(0,0,0,0.04)]">
                         <Select
                           value={agent.supervisorName || ''}
                           onValueChange={(val) => handleSupervisorChange(agent.staffNumber, val)}
@@ -588,6 +607,88 @@ export function AgentRosterTable({ initialRosterData }: AgentRosterTableProps) {
             </tbody>
           </table>
         </div>
+
+        {/* Roster Pagination Controls */}
+        {totalAgents > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-slate-50/70 border-t">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground w-full sm:w-auto justify-between sm:justify-start">
+              <span>
+                Showing <strong className="text-foreground">{startIndex + 1}</strong> to{' '}
+                <strong className="text-foreground">{endIndex}</strong> of{' '}
+                <strong className="text-foreground">{totalAgents}</strong> agents
+              </span>
+
+              <div className="flex items-center gap-1.5 ml-0 sm:ml-2">
+                <span className="text-[11px]">Per page:</span>
+                <Select
+                  value={String(pageSize)}
+                  onValueChange={(val) => {
+                    setPageSize(Number(val));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-7 w-[68px] text-xs bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 bg-white"
+                onClick={() => setCurrentPage(1)}
+                disabled={safePage === 1}
+                title="First Page"
+              >
+                <ChevronsLeft className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 bg-white"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safePage === 1}
+                title="Previous Page"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+
+              <div className="flex items-center px-2 text-xs font-medium">
+                Page {safePage} of {totalPages}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 bg-white"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                title="Next Page"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 bg-white"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={safePage === totalPages}
+                title="Last Page"
+              >
+                <ChevronsRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Pattern Modal: Apply Shift Pattern across Month */}

@@ -10,9 +10,11 @@ import {
   CalendarClock,
   Navigation,
   Layers,
+  Loader2,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 import {
   Sidebar,
@@ -73,6 +75,11 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPendingUrl(null);
+  }, [pathname]);
 
   return (
     <Sidebar>
@@ -91,13 +98,31 @@ export function AppSidebar() {
                 const isActive =
                   pathname === item.url ||
                   (item.url !== '/admin' && pathname.startsWith(item.url));
+                const isNavigating = pendingUrl === item.url;
 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                      <Link href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.title}
+                    >
+                      <Link
+                        href={item.url}
+                        onClick={() => {
+                          if (pathname !== item.url) {
+                            setPendingUrl(item.url);
+                          }
+                        }}
+                        className="flex items-center justify-between w-full"
+                      >
+                        <div className="flex items-center gap-2">
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </div>
+                        {isNavigating && (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0 ml-auto" />
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

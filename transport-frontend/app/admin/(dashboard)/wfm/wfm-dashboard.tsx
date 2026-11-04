@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -48,6 +48,10 @@ import {
   ExternalLink,
   TableProperties,
   Layers,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 import { STAFF_ROLES, StaffRole, ROLE_INFO } from '@/lib/booking-options';
 import { ScheduleModal } from './schedule-modal';
@@ -92,6 +96,38 @@ export function WfmDashboard({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [syncingScheduleId, setSyncingScheduleId] = useState<string | null>(null);
 
+  // Tab state with loading effect
+  const [activeTab, setActiveTab] = useState<string>('roster');
+  const [isTabSwitching, setIsTabSwitching] = useState<boolean>(false);
+  const [isTabPending, startTabTransition] = useTransition();
+
+  const handleTabChange = (newTab: string) => {
+    if (newTab === activeTab) return;
+    setIsTabSwitching(true);
+    startTabTransition(() => {
+      setActiveTab(newTab);
+      setTimeout(() => {
+        setIsTabSwitching(false);
+      }, 250);
+    });
+  };
+
+  const TAB_LABELS: Record<string, string> = {
+    roster: 'Agent Monthly Shift Roster',
+    schedules: 'Monthly Schedules & Roster',
+    shifts: 'Adjustable Role Shifts',
+    campaigns: 'Campaign Rest Days Policy',
+  };
+
+  // Schedules Table Pagination state
+  const [schedulePage, setSchedulePage] = useState<number>(1);
+  const [schedulePageSize, setSchedulePageSize] = useState<number>(10);
+
+  // Reset page when search or role filter changes
+  useEffect(() => {
+    setSchedulePage(1);
+  }, [searchTerm, roleFilter]);
+
   // Filtered schedules
   const filteredSchedules = useMemo(() => {
     return initialSchedules.filter((sched) => {
@@ -106,6 +142,16 @@ export function WfmDashboard({
       return true;
     });
   }, [initialSchedules, roleFilter, searchTerm]);
+
+  // Paginated schedules calculation
+  const totalSchedules = filteredSchedules.length;
+  const totalSchedulePages = Math.max(1, Math.ceil(totalSchedules / schedulePageSize));
+  const safeSchedulePage = Math.min(schedulePage, totalSchedulePages);
+  const scheduleStartIndex = (safeSchedulePage - 1) * schedulePageSize;
+  const scheduleEndIndex = Math.min(scheduleStartIndex + schedulePageSize, totalSchedules);
+  const paginatedSchedules = useMemo(() => {
+    return filteredSchedules.slice(scheduleStartIndex, scheduleEndIndex);
+  }, [filteredSchedules, scheduleStartIndex, scheduleEndIndex]);
 
   // Filtered shifts
   const filteredShifts = useMemo(() => {
@@ -188,15 +234,15 @@ export function WfmDashboard({
       {/* Top Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             Workforce Management (WFM) Rostering
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Create monthly flexible schedules for all staff roles and automate transport bookings.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
@@ -205,7 +251,7 @@ export function WfmDashboard({
               setShiftRoleTarget(roleFilter !== 'ALL' ? roleFilter : 'Agent');
               setIsShiftModalOpen(true);
             }}
-            className="gap-1.5 text-xs"
+            className="gap-1.5 text-xs flex-1 sm:flex-initial"
           >
             <Clock className="w-3.5 h-3.5" />
             Adjust Role Shifts
@@ -214,7 +260,7 @@ export function WfmDashboard({
           <Button
             size="sm"
             onClick={() => setIsScheduleModalOpen(true)}
-            className="gap-1.5 text-xs bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-sm"
+            className="gap-1.5 text-xs bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-sm flex-1 sm:flex-initial"
           >
             <Plus className="w-3.5 h-3.5" />
             Create &amp; Assign Schedule
@@ -223,7 +269,7 @@ export function WfmDashboard({
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Schedules</CardTitle>
@@ -285,105 +331,298 @@ export function WfmDashboard({
       </div>
 
       {/* Main Tabs */}
-      <Tabs defaultValue="roster" className="space-y-4">
-        <TabsList className="bg-slate-100/80 p-1 border">
-          <TabsTrigger value="roster" className="gap-2 font-semibold">
-            <TableProperties className="w-4 h-4 text-primary" />
-            Agent Monthly Shift Roster
-          </TabsTrigger>
-          <TabsTrigger value="schedules" className="gap-2">
-            <CalendarDays className="w-4 h-4" />
-            Monthly Schedules &amp; Roster
-          </TabsTrigger>
-          <TabsTrigger value="shifts" className="gap-2">
-            <Clock className="w-4 h-4" />
-            Adjustable Role Shifts ({initialShifts.length})
-          </TabsTrigger>
-          <TabsTrigger value="campaigns" className="gap-2">
-            <Users className="w-4 h-4" />
-            Campaign Rest Days ({initialCampaigns.length})
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
+        <div className="w-full overflow-x-auto pb-1 scrollbar-none">
+          <TabsList className="bg-slate-100/90 p-1 border inline-flex w-auto min-w-full sm:min-w-0 justify-start h-auto gap-1">
+            <TabsTrigger value="roster" className="gap-2 font-semibold whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm shrink-0">
+              <TableProperties className="w-4 h-4 text-primary" />
+              Agent Monthly Shift Roster
+            </TabsTrigger>
+            <TabsTrigger value="schedules" className="gap-2 whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm shrink-0">
+              <CalendarDays className="w-4 h-4" />
+              Monthly Schedules &amp; Roster ({activeSchedulesCount})
+            </TabsTrigger>
+            <TabsTrigger value="shifts" className="gap-2 whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm shrink-0">
+              <Clock className="w-4 h-4" />
+              Adjustable Role Shifts ({initialShifts.length})
+            </TabsTrigger>
+            <TabsTrigger value="campaigns" className="gap-2 whitespace-nowrap px-3 py-1.5 text-xs sm:text-sm shrink-0">
+              <Users className="w-4 h-4" />
+              Campaign Rest Days ({initialCampaigns.length})
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        {/* Tab 0: Large Agent Monthly Roster Matrix */}
-        <TabsContent value="roster" className="space-y-4">
-          {initialRosterData ? (
-            <AgentRosterTable initialRosterData={initialRosterData} />
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                <Spinner className="w-6 h-6 mx-auto mb-2" />
-                Loading Agent Monthly Shift Roster...
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+        {/* Tab Switch Loading Bar */}
+        {(isTabSwitching || isTabPending) && (
+          <div className="relative w-full h-1 bg-slate-100 overflow-hidden rounded-full animate-in fade-in duration-150">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-500 to-primary animate-pulse w-full" />
+          </div>
+        )}
 
-        {/* Tab 1: Schedules & Rosters */}
-        <TabsContent value="schedules" className="space-y-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <CardTitle>Staff Rosters &amp; Transport Automation</CardTitle>
-                  <CardDescription>
-                    Assigned flexible shifts (e.g. 5pm to 2am) automatically book daily transport using staff destination coordinates.
-                  </CardDescription>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Role filter */}
-                  <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger className="w-[140px] h-8 text-xs">
-                      <SelectValue placeholder="All Roles" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">All Roles</SelectItem>
-                      {STAFF_ROLES.map((r) => (
-                        <SelectItem key={r} value={r}>
-                          {r}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {/* Search */}
-                  <div className="relative w-48 sm:w-60">
-                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                    <Input
-                      placeholder="Search employee..."
-                      className="pl-8 h-8 text-xs"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
+        {(isTabSwitching || isTabPending) ? (
+          <Card className="border shadow-sm">
+            <CardContent className="py-16 flex flex-col items-center justify-center gap-3 text-muted-foreground animate-in fade-in-50 duration-200">
+              <div className="relative flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+                <Spinner className="w-4 h-4 text-primary absolute" />
               </div>
-            </CardHeader>
+              <div className="text-sm font-semibold text-slate-800">
+                Loading {TAB_LABELS[activeTab] || 'tab data'}...
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Preparing views and schedule configurations
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Tab 0: Large Agent Monthly Roster Matrix */}
+            <TabsContent value="roster" className="space-y-4">
+              {initialRosterData ? (
+                <AgentRosterTable initialRosterData={initialRosterData} />
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    <Spinner className="w-6 h-6 mx-auto mb-2" />
+                    Loading Agent Monthly Shift Roster...
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
 
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Employee &amp; Role</TableHead>
-                      <TableHead>Assigned Shift</TableHead>
-                      <TableHead>Duration Period</TableHead>
-                      <TableHead>Working Days</TableHead>
-                      <TableHead>Transport Destination</TableHead>
-                      <TableHead>Automation Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+            {/* Tab 1: Schedules & Rosters */}
+            <TabsContent value="schedules" className="space-y-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-base sm:text-lg">Staff Rosters &amp; Transport Automation</CardTitle>
+                        <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                          {totalSchedules} Total
+                        </Badge>
+                      </div>
+                      <CardDescription className="text-xs mt-1">
+                        Assigned flexible shifts automatically book daily transport using staff destination coordinates.
+                      </CardDescription>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+                      {/* Role filter */}
+                      <Select value={roleFilter} onValueChange={setRoleFilter}>
+                        <SelectTrigger className="w-full sm:w-[150px] h-8 text-xs">
+                          <SelectValue placeholder="All Roles" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ALL">All Roles</SelectItem>
+                          {STAFF_ROLES.map((r) => (
+                            <SelectItem key={r} value={r}>
+                              {r}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      {/* Search */}
+                      <div className="relative w-full sm:w-60">
+                        <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                          placeholder="Search employee, BMS..."
+                          className="pl-8 h-8 text-xs w-full"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  {/* Desktop & Tablet Table View (hidden on mobile < md) */}
+                  <div className="hidden md:block rounded-xl border overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <Table className="min-w-[940px]">
+                        <TableHeader>
+                          <TableRow className="bg-slate-50/70">
+                            <TableHead className="w-[230px] min-w-[200px]">Employee &amp; Role</TableHead>
+                            <TableHead className="w-[150px] min-w-[130px]">Assigned Shift</TableHead>
+                            <TableHead className="w-[150px] min-w-[130px]">Duration Period</TableHead>
+                            <TableHead className="w-[170px] min-w-[150px]">Working Days</TableHead>
+                            <TableHead className="w-[200px] min-w-[170px]">Transport Destination</TableHead>
+                            <TableHead className="w-[140px] min-w-[120px]">Automation Status</TableHead>
+                            <TableHead className="w-[120px] min-w-[100px] text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredSchedules.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                                No schedules found matching criteria. Click &quot;Create &amp; Assign Schedule&quot; to assign monthly shifts.
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            paginatedSchedules.map((schedule) => {
+                              const staff = schedule.staff;
+                              const role = (schedule.role as StaffRole) || 'Agent';
+                              const roleMeta = ROLE_INFO[role] || ROLE_INFO.Agent;
+                              const isOvernight =
+                                schedule.shift.includes('02:00') ||
+                                schedule.shift.includes('01:00') ||
+                                schedule.shift.includes('03:00') ||
+                                schedule.shift.includes('05:00');
+
+                              const isSyncing = syncingScheduleId === schedule.id;
+
+                              return (
+                                <TableRow key={schedule.id} className="hover:bg-slate-50/50">
+                                  <TableCell>
+                                    <div className="space-y-0.5">
+                                      <div className="font-semibold text-slate-900 text-sm truncate max-w-[200px]">
+                                        {staff?.name || schedule.staffNumber}
+                                      </div>
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-xs font-mono font-bold text-primary">
+                                          {staff?.bmsNumber ? `BMS: ${staff.bmsNumber}` : schedule.staffNumber}
+                                        </span>
+                                        <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${roleMeta.badgeColor}`}>
+                                          {role}
+                                        </Badge>
+                                        <span className="text-[11px] text-muted-foreground font-mono">
+                                          ({schedule.staffNumber})
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </TableCell>
+
+                                  <TableCell>
+                                    <div className="flex flex-col gap-0.5">
+                                      <div className="flex items-center gap-1">
+                                        <span className="font-semibold text-sm text-slate-800">{schedule.shift}</span>
+                                        {isOvernight && (
+                                          <span title="Overnight shift (cross-midnight)" className="text-xs">
+                                            🌙
+                                          </span>
+                                        )}
+                                      </div>
+                                      {isOvernight && (
+                                        <span className="text-[11px] text-indigo-600 font-medium">Overnight</span>
+                                      )}
+                                    </div>
+                                  </TableCell>
+
+                                  <TableCell>
+                                    <div className="text-xs text-slate-700 space-y-0.5">
+                                      <div className="font-medium">{format(new Date(schedule.startDate), 'MMM dd, yyyy')}</div>
+                                      <div className="text-muted-foreground">to {format(new Date(schedule.endDate), 'MMM dd, yyyy')}</div>
+                                    </div>
+                                  </TableCell>
+
+                                  <TableCell>
+                                    <div className="flex flex-wrap gap-1 max-w-[150px]">
+                                      {DAY_LABELS.map((d, i) => {
+                                        const active = (schedule.workingDays as number[]).includes(i);
+                                        return (
+                                          <span
+                                            key={d}
+                                            className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                                              active
+                                                ? 'bg-primary text-white'
+                                                : 'bg-muted text-muted-foreground/40'
+                                            }`}
+                                          >
+                                            {d}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  </TableCell>
+
+                                  <TableCell>
+                                    <div className="flex flex-col text-xs max-w-[190px] space-y-0.5">
+                                      <div className="flex items-center gap-1 font-medium text-slate-800 truncate">
+                                        <MapPin className="w-3 h-3 text-primary shrink-0" />
+                                        <span className="truncate">{staff?.location || '-'} &bull; {staff?.route || '-'}</span>
+                                      </div>
+                                      {staff?.latitude && staff?.longitude ? (
+                                        <a
+                                          href={staff.googleMapsUrl || `https://www.google.com/maps?q=${staff.latitude},${staff.longitude}`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-[11px] text-primary hover:underline flex items-center gap-0.5"
+                                        >
+                                          Coords: {staff.latitude.toFixed(4)}, {staff.longitude.toFixed(4)}
+                                          <ExternalLink className="w-2.5 h-2.5" />
+                                        </a>
+                                      ) : (
+                                        <span className="text-[11px] text-amber-600">Pin coords pending</span>
+                                      )}
+                                    </div>
+                                  </TableCell>
+
+                                  <TableCell>
+                                    {schedule.lastSyncedAt ? (
+                                      <div className="flex flex-col gap-0.5">
+                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] w-fit gap-1">
+                                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                          Bookings Synced
+                                        </Badge>
+                                        <span className="text-[10px] text-muted-foreground">
+                                          {format(new Date(schedule.lastSyncedAt), 'MMM dd, HH:mm')}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] w-fit">
+                                        Pending Sync
+                                      </Badge>
+                                    )}
+                                  </TableCell>
+
+                                  <TableCell className="text-right">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleGenerateForSchedule(schedule.id)}
+                                        disabled={isSyncing}
+                                        title="Generate/Update daily transport bookings from this schedule"
+                                        className="h-8 text-xs text-primary gap-1"
+                                      >
+                                        {isSyncing ? (
+                                          <Spinner className="w-3.5 h-3.5" />
+                                        ) : (
+                                          <Sparkles className="w-3.5 h-3.5" />
+                                        )}
+                                        Automate
+                                      </Button>
+
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDeleteSchedule(schedule.id)}
+                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+
+                  {/* Mobile Schedule Cards View (visible on < md) */}
+                  <div className="block md:hidden space-y-3">
                     {filteredSchedules.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                          No schedules found matching criteria. Click &quot;Create &amp; Assign Schedule&quot; to assign monthly shifts.
-                        </TableCell>
-                      </TableRow>
+                      <div className="p-8 text-center text-muted-foreground text-xs rounded-xl border bg-muted/10">
+                        No schedules found matching criteria. Click &quot;Create &amp; Assign Schedule&quot; to assign monthly shifts.
+                      </div>
                     ) : (
-                      filteredSchedules.map((schedule) => {
+                      paginatedSchedules.map((schedule) => {
                         const staff = schedule.staff;
                         const role = (schedule.role as StaffRole) || 'Agent';
                         const roleMeta = ROLE_INFO[role] || ROLE_INFO.Agent;
@@ -392,64 +631,63 @@ export function WfmDashboard({
                           schedule.shift.includes('01:00') ||
                           schedule.shift.includes('03:00') ||
                           schedule.shift.includes('05:00');
-
                         const isSyncing = syncingScheduleId === schedule.id;
 
                         return (
-                          <TableRow key={schedule.id}>
-                            <TableCell>
+                          <div
+                            key={schedule.id}
+                            className="p-3.5 rounded-xl border bg-card hover:border-primary/30 transition-all shadow-sm space-y-3"
+                          >
+                            <div className="flex items-start justify-between gap-2">
                               <div>
                                 <div className="font-semibold text-slate-900 text-sm">
                                   {staff?.name || schedule.staffNumber}
                                 </div>
-                                <div className="flex items-center gap-1.5 mt-0.5">
+                                <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                                   <span className="text-xs font-mono font-bold text-primary">
                                     {staff?.bmsNumber ? `BMS: ${staff.bmsNumber}` : schedule.staffNumber}
                                   </span>
                                   <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${roleMeta.badgeColor}`}>
                                     {role}
                                   </Badge>
-                                  <span className="text-[11px] text-muted-foreground font-mono">
-                                    ({schedule.staffNumber})
-                                  </span>
                                 </div>
                               </div>
-                            </TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteSchedule(schedule.id)}
+                                className="h-7 w-7 p-0 text-muted-foreground hover:text-red-600 shrink-0"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
 
-                            <TableCell>
-                              <div className="flex flex-col gap-0.5">
-                                <div className="flex items-center gap-1">
-                                  <span className="font-semibold text-sm text-slate-800">{schedule.shift}</span>
-                                  {isOvernight && (
-                                    <span title="Overnight shift (cross-midnight)" className="text-xs">
-                                      🌙
-                                    </span>
-                                  )}
+                            <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t">
+                              <div>
+                                <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Shift</span>
+                                <div className="font-semibold text-slate-800 flex items-center gap-1">
+                                  {schedule.shift}
+                                  {isOvernight && <span title="Overnight">🌙</span>}
                                 </div>
-                                {isOvernight && (
-                                  <span className="text-[11px] text-indigo-600 font-medium">Overnight</span>
-                                )}
                               </div>
-                            </TableCell>
-
-                            <TableCell>
-                              <div className="text-xs text-slate-700">
-                                <div>{format(new Date(schedule.startDate), 'MMM dd, yyyy')}</div>
-                                <div className="text-muted-foreground">to {format(new Date(schedule.endDate), 'MMM dd, yyyy')}</div>
+                              <div>
+                                <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Period</span>
+                                <div className="text-slate-700">
+                                  {format(new Date(schedule.startDate), 'MMM dd')} - {format(new Date(schedule.endDate), 'MMM dd')}
+                                </div>
                               </div>
-                            </TableCell>
+                            </div>
 
-                            <TableCell>
-                              <div className="flex flex-wrap gap-1 max-w-[140px]">
+                            <div>
+                              <span className="text-[10px] text-muted-foreground uppercase font-semibold block mb-1">Working Days</span>
+                              <div className="flex flex-wrap gap-1">
                                 {DAY_LABELS.map((d, i) => {
                                   const active = (schedule.workingDays as number[]).includes(i);
                                   return (
                                     <span
                                       key={d}
-                                      className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                        active
-                                          ? 'bg-primary text-white'
-                                          : 'bg-muted text-muted-foreground/40'
+                                      className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${
+                                        active ? 'bg-primary text-white' : 'bg-muted text-muted-foreground/40'
                                       }`}
                                     >
                                       {d}
@@ -457,86 +695,141 @@ export function WfmDashboard({
                                   );
                                 })}
                               </div>
-                            </TableCell>
+                            </div>
 
-                            <TableCell>
-                              <div className="flex flex-col text-xs max-w-[180px]">
-                                <div className="flex items-center gap-1 font-medium text-slate-800">
-                                  <MapPin className="w-3 h-3 text-primary shrink-0" />
-                                  <span>{staff?.location || '-'} &bull; {staff?.route || '-'}</span>
-                                </div>
-                                {staff?.latitude && staff?.longitude ? (
-                                  <a
-                                    href={staff.googleMapsUrl || `https://www.google.com/maps?q=${staff.latitude},${staff.longitude}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-[11px] text-primary hover:underline flex items-center gap-0.5"
-                                  >
-                                    Coords: {staff.latitude.toFixed(4)}, {staff.longitude.toFixed(4)}
-                                    <ExternalLink className="w-2.5 h-2.5" />
-                                  </a>
-                                ) : (
-                                  <span className="text-[11px] text-amber-600">Pin coords pending</span>
-                                )}
+                            <div className="pt-2 border-t text-xs space-y-1">
+                              <div className="flex items-center gap-1 font-medium text-slate-800">
+                                <MapPin className="w-3 h-3 text-primary shrink-0" />
+                                <span className="truncate">{staff?.location || '-'} &bull; {staff?.route || '-'}</span>
                               </div>
-                            </TableCell>
-
-                            <TableCell>
-                              {schedule.lastSyncedAt ? (
-                                <div className="flex flex-col gap-0.5">
-                                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] w-fit gap-1">
-                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                    Bookings Synced
-                                  </Badge>
-                                  <span className="text-[10px] text-muted-foreground">
-                                    {format(new Date(schedule.lastSyncedAt), 'MMM dd, HH:mm')}
-                                  </span>
-                                </div>
+                              {staff?.latitude && staff?.longitude ? (
+                                <a
+                                  href={staff.googleMapsUrl || `https://www.google.com/maps?q=${staff.latitude},${staff.longitude}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[11px] text-primary hover:underline flex items-center gap-1"
+                                >
+                                  Coords: {staff.latitude.toFixed(4)}, {staff.longitude.toFixed(4)}
+                                  <ExternalLink className="w-2.5 h-2.5" />
+                                </a>
                               ) : (
-                                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] w-fit">
+                                <span className="text-[11px] text-amber-600 block">Pin coords pending</span>
+                              )}
+                            </div>
+
+                            <div className="pt-2 border-t flex items-center justify-between gap-2">
+                              {schedule.lastSyncedAt ? (
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] gap-1">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  Synced {format(new Date(schedule.lastSyncedAt), 'MMM dd')}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px]">
                                   Pending Sync
                                 </Badge>
                               )}
-                            </TableCell>
 
-                            <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleGenerateForSchedule(schedule.id)}
-                                  disabled={isSyncing}
-                                  title="Generate/Update daily transport bookings from this schedule"
-                                  className="h-8 text-xs text-primary gap-1"
-                                >
-                                  {isSyncing ? (
-                                    <Spinner className="w-3.5 h-3.5" />
-                                  ) : (
-                                    <Sparkles className="w-3.5 h-3.5" />
-                                  )}
-                                  Automate
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteSchedule(schedule.id)}
-                                  className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleGenerateForSchedule(schedule.id)}
+                                disabled={isSyncing}
+                                className="h-7 text-xs text-primary gap-1"
+                              >
+                                {isSyncing ? <Spinner className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
+                                Automate
+                              </Button>
+                            </div>
+                          </div>
                         );
                       })
                     )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  </div>
+
+                  {/* Schedules Table Pagination Controls */}
+                  {totalSchedules > 0 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t">
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground w-full sm:w-auto justify-between sm:justify-start">
+                        <span>
+                          Showing <strong className="text-foreground">{scheduleStartIndex + 1}</strong> to{' '}
+                          <strong className="text-foreground">{scheduleEndIndex}</strong> of{' '}
+                          <strong className="text-foreground">{totalSchedules}</strong> schedules
+                        </span>
+
+                        <div className="flex items-center gap-1.5 ml-0 sm:ml-2">
+                          <span className="text-[11px]">Per page:</span>
+                          <Select
+                            value={String(schedulePageSize)}
+                            onValueChange={(val) => {
+                              setSchedulePageSize(Number(val));
+                              setSchedulePage(1);
+                            }}
+                          >
+                            <SelectTrigger className="h-7 w-[68px] text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="10">10</SelectItem>
+                              <SelectItem value="25">25</SelectItem>
+                              <SelectItem value="50">50</SelectItem>
+                              <SelectItem value="100">100</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setSchedulePage(1)}
+                          disabled={safeSchedulePage === 1}
+                          title="First Page"
+                        >
+                          <ChevronsLeft className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setSchedulePage((p) => Math.max(1, p - 1))}
+                          disabled={safeSchedulePage === 1}
+                          title="Previous Page"
+                        >
+                          <ChevronLeft className="h-3.5 w-3.5" />
+                        </Button>
+
+                        <div className="flex items-center px-2 text-xs font-medium">
+                          Page {safeSchedulePage} of {totalSchedulePages}
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setSchedulePage((p) => Math.min(totalSchedulePages, p + 1))}
+                          disabled={safeSchedulePage === totalSchedulePages}
+                          title="Next Page"
+                        >
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setSchedulePage(totalSchedulePages)}
+                          disabled={safeSchedulePage === totalSchedulePages}
+                          title="Last Page"
+                        >
+                          <ChevronsRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
         {/* Tab 2: Adjustable Role Shifts */}
         <TabsContent value="shifts" className="space-y-4">
@@ -724,7 +1017,9 @@ export function WfmDashboard({
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+      </>
+    )}
+  </Tabs>
 
       {/* Modals */}
       <ScheduleModal

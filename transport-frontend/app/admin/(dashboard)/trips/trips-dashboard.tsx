@@ -89,6 +89,22 @@ export function TripsDashboard({
   // Auto-dispatch confirmation dialog state
   const [isDispatchDialogOpen, setIsDispatchDialogOpen] = useState(false);
 
+  // Tab state with loading effect
+  const [activeTab, setActiveTab] = useState<string>('trips');
+  const [isTabSwitching, setIsTabSwitching] = useState<boolean>(false);
+  const [isTabPending, startTabTransition] = useTransition();
+
+  const handleTabChange = (newTab: string) => {
+    if (newTab === activeTab) return;
+    setIsTabSwitching(true);
+    startTabTransition(() => {
+      setActiveTab(newTab);
+      setTimeout(() => {
+        setIsTabSwitching(false);
+      }, 250);
+    });
+  };
+
   // Filtered trips
   const filteredTrips = useMemo(() => {
     return initialTrips.filter((t) => {
@@ -299,7 +315,7 @@ export function TripsDashboard({
       </div>
 
       {/* Main Tabs: Trips Manifest vs Fleet */}
-      <Tabs defaultValue="trips" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList>
           <TabsTrigger value="trips" className="gap-2">
             <Navigation className="w-4 h-4" />
@@ -311,8 +327,32 @@ export function TripsDashboard({
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab 1: Live Trips */}
-        <TabsContent value="trips" className="space-y-4">
+        {/* Tab Switch Loading Bar */}
+        {(isTabSwitching || isTabPending) && (
+          <div className="relative w-full h-1 bg-slate-100 overflow-hidden rounded-full animate-in fade-in duration-150">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-500 to-primary animate-pulse w-full" />
+          </div>
+        )}
+
+        {(isTabSwitching || isTabPending) ? (
+          <Card className="border shadow-sm">
+            <CardContent className="py-16 flex flex-col items-center justify-center gap-3 text-muted-foreground animate-in fade-in-50 duration-200">
+              <div className="relative flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+                <Spinner className="w-4 h-4 text-primary absolute" />
+              </div>
+              <div className="text-sm font-semibold text-slate-800">
+                Loading {activeTab === 'trips' ? 'Live Trips & Route Manifests' : 'Fleet Vehicles'}...
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Retrieving vehicle and route assignments
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Tab 1: Live Trips */}
+            <TabsContent value="trips" className="space-y-4">
           {/* Filter Bar */}
           <Card>
             <CardContent className="pt-4">
@@ -719,7 +759,9 @@ export function TripsDashboard({
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+      </>
+    )}
+  </Tabs>
 
       {/* Auto-Dispatch Dialog */}
       <Dialog open={isDispatchDialogOpen} onOpenChange={setIsDispatchDialogOpen}>
