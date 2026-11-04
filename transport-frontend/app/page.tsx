@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Bus, Users, Shield, CheckCircle2 } from 'lucide-react'
+import { Bus, Users, Shield, CheckCircle2, UserCheck } from 'lucide-react'
 
 export default function LandingPage() {
   return (
@@ -20,15 +20,21 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-2">
             <Link href="/staff/login">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">Staff Portal</span>
+              <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
+                <Users className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Staff</span>
+              </Button>
+            </Link>
+            <Link href="/supervisor/login">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-purple-700 hover:text-purple-800 hover:bg-purple-50">
+                <UserCheck className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Supervisor</span>
               </Button>
             </Link>
             <Link href="/admin">
-              <Button size="sm" className="gap-2 bg-gradient-to-r from-primary to-secondary">
-                <Shield className="w-4 h-4" />
-                <span className="hidden sm:inline">Admin Portal</span>
+              <Button size="sm" className="gap-1.5 text-xs bg-gradient-to-r from-primary to-secondary">
+                <Shield className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Admin</span>
               </Button>
             </Link>
           </div>
@@ -63,13 +69,19 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/staff/login">
-                <Button size="lg" className="gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg px-8 text-base">
+                <Button size="lg" className="gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg px-7 text-base">
                   <Users className="w-5 h-5" />
                   Staff Portal
                 </Button>
               </Link>
+              <Link href="/supervisor/login">
+                <Button size="lg" variant="outline" className="gap-2 px-7 text-base border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800">
+                  <UserCheck className="w-5 h-5" />
+                  Supervisor Portal
+                </Button>
+              </Link>
               <Link href="/admin">
-                <Button size="lg" variant="outline" className="gap-2 px-8 text-base">
+                <Button size="lg" variant="outline" className="gap-2 px-7 text-base">
                   <Shield className="w-5 h-5" />
                   Admin Portal
                 </Button>
@@ -96,6 +108,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-6">
             <Link href="/staff/login" className="hover:text-slate-700 transition-colors">Staff Portal</Link>
+            <Link href="/supervisor/login" className="hover:text-slate-700 transition-colors">Supervisor Portal</Link>
             <Link href="/admin" className="hover:text-slate-700 transition-colors">Admin Portal</Link>
             <Link href="/calendar" className="hover:text-slate-700 transition-colors">Calendar</Link>
           </div>

@@ -944,7 +944,7 @@ export function WfmDashboard({
                 <div>
                   <CardTitle>Campaign Rest Days Policy (Sun &rarr; Sat Week Cycle)</CardTitle>
                   <CardDescription>
-                    Every staff member has 2 rest days per week (5 working days). Rest day pairs vary depending on the campaign (e.g. Caption Call rest days range from Friday to Monday).
+                    Every staff member has 2 rest days per week (5 working days). Rest day pairs vary depending on the campaign.
                   </CardDescription>
                 </div>
                 <Link href="/admin/campaigns">

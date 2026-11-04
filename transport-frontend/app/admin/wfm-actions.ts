@@ -160,11 +160,24 @@ export async function updateStaffRoleAndTransportAction(
     }
   }
 
+  let supervisorId: string | null | undefined = undefined;
+  if (data.supervisorName) {
+    const supervisor = await prisma.staff.findFirst({
+      where: { name: data.supervisorName, role: 'Supervisor' },
+    });
+    if (supervisor) {
+      supervisorId = supervisor.id;
+    }
+  } else if (data.supervisorName === '') {
+    supervisorId = null;
+  }
+
   const updated = await prisma.staff.update({
     where: { id: staffId },
     data: {
       ...(data.role ? { role: data.role } : {}),
-      ...(data.supervisorName !== undefined ? { supervisorName: data.supervisorName } : {}),
+      ...(data.supervisorName !== undefined ? { supervisorName: data.supervisorName || null } : {}),
+      ...(supervisorId !== undefined ? { supervisorId } : {}),
       ...(data.phoneNumber !== undefined ? { phoneNumber: data.phoneNumber } : {}),
       ...(data.location !== undefined ? { location: data.location } : {}),
       ...(data.route !== undefined ? { route: data.route } : {}),
@@ -637,11 +650,27 @@ export async function updateAgentSupervisorAction(data: {
 }) {
   await checkAdminAuth();
 
+  let supervisorId: string | undefined = undefined;
+  if (data.supervisorName) {
+    const supervisor = await prisma.staff.findFirst({
+      where: { name: data.supervisorName, role: 'Supervisor' },
+    });
+    if (supervisor) {
+      supervisorId = supervisor.id;
+    }
+  }
+
   const updated = await prisma.staff.update({
     where: { staffNumber: data.staffNumber },
-    data: { supervisorName: data.supervisorName },
+    data: {
+      supervisorName: data.supervisorName,
+      ...(supervisorId !== undefined ? { supervisorId } : {}),
+    },
   });
 
   revalidatePath('/admin/wfm');
+  revalidatePath('/admin/staff');
+  revalidatePath('/supervisor');
+  revalidatePath('/supervisor/agents');
   return { success: true, staff: updated };
 }

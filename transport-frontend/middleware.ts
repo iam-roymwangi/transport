@@ -12,6 +12,10 @@ export function middleware(request: NextRequest) {
   const isStaffLoginPage = pathname === '/staff/login';
   const staffAuthCookie = request.cookies.get('staff_token')?.value;
 
+  const isSupervisorRoute = pathname.startsWith('/supervisor');
+  const isSupervisorLoginPage = pathname === '/supervisor/login';
+  const supervisorAuthCookie = request.cookies.get('supervisor_token')?.value;
+
   const isProtectedApi = (pathname === '/api/bookings' || pathname === '/api/summary') && request.method === 'GET';
 
   // Admin Auth Check
@@ -36,6 +40,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/staff', request.url));
   }
 
+  // Supervisor Auth Check
+  if (isSupervisorRoute && !isSupervisorLoginPage) {
+    if (!supervisorAuthCookie) {
+      return NextResponse.redirect(new URL('/supervisor/login', request.url));
+    }
+  }
+
+  if (isSupervisorLoginPage && supervisorAuthCookie) {
+    return NextResponse.redirect(new URL('/supervisor', request.url));
+  }
+
   // API Auth Check
   if (isProtectedApi) {
     // Both admin and staff might need API access depending on the route, 
@@ -50,5 +65,14 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/admin', '/staff/:path*', '/staff', '/api/bookings', '/api/summary'],
+  matcher: [
+    '/admin/:path*',
+    '/admin',
+    '/staff/:path*',
+    '/staff',
+    '/supervisor/:path*',
+    '/supervisor',
+    '/api/bookings',
+    '/api/summary',
+  ],
 };

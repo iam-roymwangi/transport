@@ -32,7 +32,7 @@ export default function LoginPage() {
           </CardHeader>
           <form action={formAction}>
             <CardContent className="grid gap-4">
-              <div className="grid gap-2">
+              <div className="grid gap-2 pb-4">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <KeyRound className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

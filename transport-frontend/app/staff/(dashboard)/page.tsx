@@ -58,6 +58,11 @@ export default async function StaffDashboardPage() {
             <Badge variant="outline" className={roleMeta.badgeColor}>
               {role}
             </Badge>
+            {staff?.supervisorName && (
+              <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                Supervisor: {staff.supervisorName}
+              </Badge>
+            )}
           </div>
           <p className="text-muted-foreground mt-1">
             BMS Number: <span className="font-semibold text-primary font-mono text-base">{staff?.bmsNumber || 'N/A'}</span> &bull; ID: <span className="font-semibold text-slate-700">{staff?.staffNumber}</span> &bull; {roleMeta.description}
@@ -159,6 +164,7 @@ export default async function StaffDashboardPage() {
           <StaffDashboardClient 
             initialBookings={myBookings} 
             pendingRequests={myPendingRequests}
+            staff={staff}
           />
         </CardContent>
       </Card>

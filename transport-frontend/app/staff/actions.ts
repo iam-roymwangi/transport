@@ -80,14 +80,44 @@ export async function submitEditRequestAction(bookingId: string, requestedChange
       parsedData.date = new Date(parsedData.date).toISOString();
     }
 
+    // Lookup agent to find their supervisor
+    const staff = await prisma.staff.findUnique({
+      where: { staffNumber: authCookie },
+    });
+
+    let supervisorId = staff?.supervisorId;
+    let supervisorName = staff?.supervisorName;
+
+    // Ensure every agent has a supervisor
+    if (!supervisorName) {
+      const defaultSupervisor = await prisma.staff.findFirst({
+        where: { role: 'Supervisor' },
+      });
+      if (defaultSupervisor) {
+        supervisorId = defaultSupervisor.id;
+        supervisorName = defaultSupervisor.name;
+        // Update staff record so they have this supervisor permanently
+        await prisma.staff.update({
+          where: { staffNumber: authCookie },
+          data: {
+            supervisorId: defaultSupervisor.id,
+            supervisorName: defaultSupervisor.name,
+          },
+        });
+      }
+    }
+
     await prisma.bookingEditRequest.create({
       data: {
         bookingId,
         staffNumber: authCookie,
         requestedChanges: parsedData,
+        supervisorId: supervisorId || null,
+        supervisorName: supervisorName || null,
+        reason: requestedChanges.reason || null,
       },
     });
-    return { success: true };
+    return { success: true, supervisorName };
   } catch (error) {
     console.error('Error submitting edit request:', error);
     return { success: false, error: 'Failed to submit edit request.' };

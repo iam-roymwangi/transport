@@ -183,9 +183,6 @@ export function CampaignsDashboard({
               {initialCampaigns.length} Active Campaigns
             </Badge>
           </div>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Configure campaign rest day rules (Sunday–Saturday week, 2 rest days policy, Friday to Monday for Caption Call), and assign staff.
-          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -229,23 +226,6 @@ export function CampaignsDashboard({
             </div>
             <p className="text-xs text-muted-foreground">
               Employees assigned to campaigns
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-amber-200 bg-amber-50/30">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-amber-900">
-              Caption Call Campaign
-            </CardTitle>
-            <Sparkles className="h-4 w-4 text-amber-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-700">
-              {captionCall?.staffCount || 0} Staff
-            </div>
-            <p className="text-xs text-amber-800">
-              Rest window: <strong>Fri – Mon</strong> ([5, 6, 0, 1])
             </p>
           </CardContent>
         </Card>

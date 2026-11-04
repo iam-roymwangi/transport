@@ -49,46 +49,9 @@ export function Navbar({ onExport, exportDisabled, onBookingAdded }: NavbarProps
             </div>
             <span className="sm:hidden text-base text-foreground">Transport Booking</span>
           </Link>
+   
 
-          {/* Desktop nav links */}
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`
-                    flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                    ${active
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    }
-                  `}
-                >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </Link>
-              )
-            })}
-          </nav>
 
-          {/* Desktop actions */}
-          <div className="hidden md:flex items-center gap-2">
-            {onExport && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                disabled={exportDisabled}
-                onClick={onExport}
-              >
-                <Download className="w-4 h-4" />
-                Export
-              </Button>
-            )}
-            <AddBookingForm onBookingAdded={onBookingAdded} />
-          </div>
 
           {/* Mobile: hamburger */}
           <button

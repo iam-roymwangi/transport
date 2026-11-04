@@ -45,6 +45,7 @@ import {
   ExternalLink,
   Edit,
   Compass,
+  UserCheck,
 } from 'lucide-react';
 import type { Staff } from '@prisma/client';
 import {
@@ -82,6 +83,7 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
 
   // Edit form state
   const [editRole, setEditRole] = useState<string>('Agent');
+  const [editSupervisorName, setEditSupervisorName] = useState<string>('');
   const [editPhone, setEditPhone] = useState<string>('');
   const [editLocation, setEditLocation] = useState<string>('');
   const [editRoute, setEditRoute] = useState<string>('');
@@ -92,9 +94,14 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
   const [editLat, setEditLat] = useState<string>('');
   const [editLng, setEditLng] = useState<string>('');
 
+  const supervisors = useMemo(() => {
+    return initialStaff.filter((s) => (s as any).role === 'Supervisor');
+  }, [initialStaff]);
+
   const openEditModal = (staff: Staff) => {
     setEditingStaff(staff);
     setEditRole((staff as any).role || 'Agent');
+    setEditSupervisorName((staff as any).supervisorName || '');
     setEditPhone(staff.phoneNumber || '');
     setEditLocation(staff.location || '');
     setEditRoute(staff.route || '');
@@ -159,6 +166,7 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
       const lngVal = editLng ? parseFloat(editLng) : null;
       const res = await updateStaffRoleAndTransportAction(editingStaff.id, {
         role: editRole,
+        supervisorName: editSupervisorName,
         phoneNumber: editPhone,
         location: editLocation,
         route: editRoute,
@@ -213,6 +221,7 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
       'BMS Number': (s as any).bmsNumber || 'N/A',
       'Staff Number': s.staffNumber,
       'Role': (s as any).role || 'Agent',
+      'Supervisor': (s as any).supervisorName || 'N/A',
       'Phone Number': s.phoneNumber || 'N/A',
       'Location': s.location || 'N/A',
       'Current Shift': s.currentShift || 'N/A',
@@ -229,7 +238,7 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Staff Directory');
 
     const wscols = [
-      { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 },
+      { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 20 }, { wch: 15 },
       { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 30 }, { wch: 12 },
       { wch: 12 }, { wch: 35 },
     ];
@@ -333,6 +342,12 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
                               ({staff.staffNumber})
                             </span>
                           </div>
+                          {(staff as any).supervisorName && (
+                            <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <UserCheck className="w-3 h-3 text-purple-600 shrink-0" />
+                              <span>Supervisor: <strong className="font-medium text-slate-700">{(staff as any).supervisorName}</strong></span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </TableCell>
@@ -491,6 +506,29 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="staff-supervisor">Assigned Supervisor</Label>
+                  <Select
+                    value={editSupervisorName || 'none'}
+                    onValueChange={(val) => setEditSupervisorName(val === 'none' ? '' : val)}
+                    disabled={isPending}
+                  >
+                    <SelectTrigger id="staff-supervisor">
+                      <SelectValue placeholder="Select supervisor..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">-- None --</SelectItem>
+                      {supervisors.map((sup) => (
+                        <SelectItem key={sup.id} value={sup.name}>
+                          {sup.name} ({sup.staffNumber})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="staff-phone">Phone Number</Label>
                   <Input
                     id="staff-phone"
@@ -499,9 +537,7 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
                     disabled={isPending}
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="staff-loc">Office Hub Location</Label>
                   <Select value={editLocation} onValueChange={setEditLocation} disabled={isPending}>
@@ -517,7 +553,9 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="staff-route">Transport Route</Label>
                   <Select value={editRoute} onValueChange={setEditRoute} disabled={isPending}>
@@ -533,9 +571,7 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="staff-shift">Current Shift</Label>
                   <Select value={editShift} onValueChange={setEditShift} disabled={isPending}>
@@ -551,7 +587,9 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="staff-process">Process</Label>
                   <Select value={editProcess} onValueChange={setEditProcess} disabled={isPending}>
@@ -567,17 +605,17 @@ export function StaffClientTable({ initialStaff }: StaffClientTableProps) {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="staff-address">Destination Address</Label>
-                <Input
-                  id="staff-address"
-                  value={editAddress}
-                  onChange={(e) => setEditAddress(e.target.value)}
-                  placeholder="e.g. Roysambu Lumumba Dr"
-                  disabled={isPending}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="staff-address">Destination Address</Label>
+                  <Input
+                    id="staff-address"
+                    value={editAddress}
+                    onChange={(e) => setEditAddress(e.target.value)}
+                    placeholder="e.g. Roysambu Lumumba Dr"
+                    disabled={isPending}
+                  />
+                </div>
               </div>
 
               {/* Exact Google Maps Destination Pin & Coordinates */}

@@ -29,16 +29,16 @@ export function StaffSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar>
-      <SidebarHeader className="h-16 flex items-center justify-center border-b px-4">
-        <div className="flex w-full items-center gap-2 font-bold text-lg text-primary">
-          <Bus className="h-6 w-6" />
-          <span>Staff Portal</span>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="h-16 flex items-center justify-center border-b px-3 group-data-[collapsible=icon]:px-0">
+        <div className="flex w-full items-center gap-2 font-bold text-lg text-primary overflow-hidden group-data-[collapsible=icon]:justify-center">
+          <Bus className="h-6 w-6 shrink-0" />
+          <span className="truncate group-data-[collapsible=icon]:hidden">Staff Portal</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
@@ -47,9 +47,9 @@ export function StaffSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                      <Link href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
+                      <Link href={item.url} className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        <span className="truncate group-data-[collapsible=icon]:hidden">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -59,7 +59,7 @@ export function StaffSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 text-xs text-muted-foreground text-center">
+      <SidebarFooter className="p-4 text-xs text-muted-foreground text-center group-data-[collapsible=icon]:hidden">
         © 2026 Transport
       </SidebarFooter>
       <SidebarRail />

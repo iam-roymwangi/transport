@@ -82,16 +82,16 @@ export function AppSidebar() {
   }, [pathname]);
 
   return (
-    <Sidebar>
-      <SidebarHeader className="h-16 flex items-center justify-center border-b px-4">
-        <div className="flex w-full items-center gap-2 font-bold text-lg text-primary">
-          <Bus className="h-6 w-6" />
-          <span>Transport Admin</span>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="h-16 flex items-center justify-center border-b px-3 group-data-[collapsible=icon]:px-0">
+        <div className="flex w-full items-center gap-2 font-bold text-lg text-primary overflow-hidden group-data-[collapsible=icon]:justify-center">
+          <Bus className="h-6 w-6 shrink-0" />
+          <span className="truncate group-data-[collapsible=icon]:hidden">Transport Admin</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
@@ -114,14 +114,14 @@ export function AppSidebar() {
                             setPendingUrl(item.url);
                           }
                         }}
-                        className="flex items-center justify-between w-full"
+                        className="flex items-center justify-between w-full group-data-[collapsible=icon]:justify-center"
                       >
-                        <div className="flex items-center gap-2">
-                          <item.icon />
-                          <span>{item.title}</span>
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          <span className="truncate group-data-[collapsible=icon]:hidden">{item.title}</span>
                         </div>
                         {isNavigating && (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0 ml-auto" />
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0 ml-auto group-data-[collapsible=icon]:hidden" />
                         )}
                       </Link>
                     </SidebarMenuButton>
@@ -132,7 +132,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 text-xs text-muted-foreground text-center">
+      <SidebarFooter className="p-4 text-xs text-muted-foreground text-center group-data-[collapsible=icon]:hidden">
         © 2026 Transport
       </SidebarFooter>
       <SidebarRail />

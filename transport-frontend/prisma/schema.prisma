@@ -54,13 +54,19 @@ model Staff {
 }
 
 model BookingEditRequest {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   bookingId        String
   staffNumber      String
   requestedChanges Json
-  status           String   @default("PENDING")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  status           String    @default("PENDING")
+  supervisorId     String?
+  supervisorName   String?
+  reason           String?
+  reviewedAt       DateTime?
+  reviewedBy       String?
+  reviewNotes      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 model SystemSettings {

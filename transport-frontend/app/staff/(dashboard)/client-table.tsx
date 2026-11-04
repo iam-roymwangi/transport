@@ -25,9 +25,10 @@ import { LOCATIONS, ROUTES, PROCESSES, SHIFTS, ROLE_INFO, StaffRole } from '@/li
 interface StaffDashboardClientProps {
   initialBookings: Booking[];
   pendingRequests: BookingEditRequest[];
+  staff?: any;
 }
 
-export function StaffDashboardClient({ initialBookings, pendingRequests }: StaffDashboardClientProps) {
+export function StaffDashboardClient({ initialBookings, pendingRequests, staff }: StaffDashboardClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
@@ -75,6 +76,7 @@ export function StaffDashboardClient({ initialBookings, pendingRequests }: Staff
       location: editLocation,
       route: editRoute,
       address: formData.get('address') as string,
+      reason: formData.get('reason') as string,
     };
     startTransition(async () => {
       const result = await submitEditRequestAction(editingBooking.id, requestedChanges);
@@ -121,11 +123,24 @@ export function StaffDashboardClient({ initialBookings, pendingRequests }: Staff
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <form onSubmit={handleEditSubmit}>
             <DialogHeader>
-              <DialogTitle>Request Booking Edit</DialogTitle>
+              <DialogTitle>Request Shift / Booking Edit</DialogTitle>
               <DialogDescription>
-                Proposed changes will be sent to the administrator for approval.
+                {staff?.supervisorName ? (
+                  <span>
+                    Your proposed shift changes will be sent directly to your supervisor, <strong className="text-foreground">{staff.supervisorName}</strong>, for approval.
+                  </span>
+                ) : (
+                  <span>Proposed changes will be sent to your supervisor for approval.</span>
+                )}
               </DialogDescription>
             </DialogHeader>
+
+            {staff?.supervisorName && (
+              <div className="mt-2 rounded-lg p-2.5 bg-purple-50 text-purple-900 border border-purple-200 text-xs flex items-center justify-between">
+                <span>Direct Supervisor: <strong>{staff.supervisorName}</strong></span>
+                <span className="text-[10px] text-purple-700 font-medium">Approval Required</span>
+              </div>
+            )}
 
             <div className="grid gap-4 py-4">
               {/* Name */}
@@ -205,6 +220,19 @@ export function StaffDashboardClient({ initialBookings, pendingRequests }: Staff
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Reason for shift change */}
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="reason" className="text-right text-sm pt-2">Reason</Label>
+                <Textarea
+                  id="reason"
+                  name="reason"
+                  placeholder="Explain why you need this shift change (sent to your supervisor)..."
+                  className="col-span-3 text-xs"
+                  rows={2}
+                  required
+                />
               </div>
 
               {/* Address */}
